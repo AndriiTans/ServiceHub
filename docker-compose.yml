@@ -1,0 +1,70 @@
+version: '3.8'
+services:
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${AUTH_SERVICE_NODE_ENV}
+      - DB_HOST=${AUTH_SERVICE_DB_HOST}
+      - DB_PORT=${AUTH_SERVICE_DB_PORT}
+      - DB_USER=${AUTH_SERVICE_DB_USER}
+      - DB_PASSWORD=${AUTH_SERVICE_DB_PASSWORD}
+      - DB_NAME=${MYSQL_AUTH_DB_NAME}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: ["/usr/src/app/wait-for-it.sh", "${AUTH_SERVICE_DB_HOST}", "${AUTH_SERVICE_DB_PORT}", "--", "npm", "start"]
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/src/app/healthcheck.sh"]
+      interval: 1s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database Service
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      # - MYSQL_DATABASE=${MYSQL_UNIVERSITY_NAME}
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./services/frontend-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    environment:
+      - REACT_APP_API_URL=${UNIVERSITY_SERVICE_URL}
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:

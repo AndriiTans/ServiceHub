@@ -1,0 +1,13 @@
+{
+  "name": "service-hub",
+  "scripts": {
+    "start": "docker-compose up --build",
+    "reset": "docker-compose down -v && docker-compose up --build --force-recreate",
+    "stop": "docker-compose down"
+  },
+  "private": true,
+  "workspaces": [
+    "auth-service",
+    "frontend-app"
+  ]
+}
