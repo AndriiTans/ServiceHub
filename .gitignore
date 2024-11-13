@@ -1,29 +1,87 @@
-node_modules
-.env
-.DS_Store
+# Compiled output
+/dist/
+/node_modules/
+/build/
+/coverage/
+/.nyc_output/
 
-# Frond-end
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# OS-specific files
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+*.swp
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+env.example
+
+# Temporary files
+.temp/
+/tmp/
+/tmp/*
+*.tmp
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# IDE and editor configuration files
+/.idea/
+/.project
+.classpath
+.c9/
+/*.launch
+/.settings/
+/*.sublime-workspace
+.vscode/
+/*.code-workspace
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# TypeScript cache
+*.tsbuildinfo
+
+# NestJS files
+nestjs-cli.json
+
+# Testing
+/jest-e2e.json
+/jest.config.js
+/jest.setup.js
+
+# Ignore build outputs for TypeScript
+tsconfig.build.json
+
+# Ignore database initialization files
+init.sql
+*.db
+
+# Ignore GitHub configuration files
+.github/
+
+# Ignore specific service files
+**/node_modules/
+
+**/dist/
+
+# Ignore test output
+/test-output/

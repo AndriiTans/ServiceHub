@@ -35,7 +35,7 @@ const startServer = async () => {
     console.log('connectDatabase - start');
     await connectDatabase();
     console.log('connectDatabase - end');
-    const PORT = process.env.PORT || 3001;
+    const PORT = process.env.PORT;
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
