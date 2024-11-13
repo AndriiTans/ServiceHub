@@ -48,6 +48,25 @@ services:
     networks:
       - app-network
 
+  # Parser Service
+  # parser-service:
+  #   build:
+  #     context: ./parser-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${PARSER_SERVICE_PORT}:${PARSER_SERVICE_PORT}"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - NODE_ENV=${PARSER_SERVICE_NODE_ENV}
+  #     - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+  #   depends_on:
+  #     auth-service:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+  #   command: ["npm", "start"]
+
   # Frontend
   frontend:
     build:
