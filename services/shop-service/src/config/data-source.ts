@@ -1,11 +1,8 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
-
-// Load environment variables from the .env file
 dotenv.config();
 
-// Define and export TypeORM configuration
-export const DatabaseConfig: TypeOrmModuleOptions = {
+export const AppDataSource = new DataSource({
   // Specify MySQL as the database type
   type: 'mysql',
 
@@ -33,4 +30,4 @@ export const DatabaseConfig: TypeOrmModuleOptions = {
 
   // Set the character set for Unicode support
   charset: 'utf8mb4_unicode_ci',
-};
+});

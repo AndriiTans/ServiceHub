@@ -60,8 +60,8 @@ services:
     command: ["npm", "start"]
     healthcheck:
       test: ["CMD-SHELL", "/usr/src/app/healthcheck.sh"]
-      interval: 1s
-      timeout: 5s
+      interval: 5s
+      timeout: 20s
       retries: 5
 
   # MySQL Database Service
@@ -102,19 +102,19 @@ services:
   #   command: ["npm", "start"]
 
   # Frontend
-  frontend:
-    build:
-      context: ./services/frontend-app
-      dockerfile: Dockerfile
-    ports:
-      - "3000:80"
-    networks:
-      - app-network
-    depends_on:
-      shop-service:
-        condition: service_healthy
-    environment:
-      - REACT_APP_API_URL=http://shop-service:3003
+  # frontend:
+  #   build:
+  #     context: ./services/frontend-app
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:80"
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     shop-service:
+  #       condition: service_healthy
+  #   environment:
+  #     - REACT_APP_API_URL=http://shop-service:3003
 
 volumes:
   mysql_data:

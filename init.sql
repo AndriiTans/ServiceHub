@@ -1,6 +1,8 @@
 CREATE DATABASE IF NOT EXISTS authdb;
-CREATE DATABASE IF NOT EXISTS universitydb;
+-- CREATE DATABASE IF NOT EXISTS universitydb;
+CREATE DATABASE IF NOT EXISTS shopdb;
 
 GRANT ALL PRIVILEGES ON authdb.* TO 'root'@'%';
-GRANT ALL PRIVILEGES ON universitydb.* TO 'root'@'%';
+-- GRANT ALL PRIVILEGES ON universitydb.* TO 'root'@'%';
+GRANT ALL PRIVILEGES ON shopdb.* TO 'root'@'%';
 FLUSH PRIVILEGES;
