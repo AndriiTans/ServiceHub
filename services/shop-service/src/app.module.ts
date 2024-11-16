@@ -3,12 +3,16 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { getMetadataArgsStorage } from 'typeorm';
+import { TableMetadataArgs } from 'typeorm/metadata-args/TableMetadataArgs';
 import { DatabaseConfig } from './config/database.config';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { CustomerModule } from './customers/customer.module';
 import { AppResolver } from './app.resolver';
+import { ShopModule } from './shops/shop.module';
+import { ProductModule } from './products/product.module';
+import { OrderModule } from './orders/order.module';
 
 @Module({
   imports: [
@@ -26,6 +30,9 @@ import { AppResolver } from './app.resolver';
       playground: process.env.NODE_ENV !== 'production',
     }),
     CustomerModule,
+    ShopModule,
+    ProductModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],
@@ -34,9 +41,10 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes(AppController);
 
-    const entities = getMetadataArgsStorage().tables.map(
-      (table: any) => (table.target as Function).name,
-    );
+    const entities = getMetadataArgsStorage().tables.map((table: TableMetadataArgs) => {
+      return (table.target as Function).name;
+    });
+
     console.log('Loaded Entities:', entities);
   }
 }

@@ -1,8 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, OneToOne, ManyToOne } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { City } from './city.entity';
 import { State } from './state.entity';
 import { Country } from './country.entity';
 import { IAddress } from '../interfaces/address.interface';
+import { Customer } from './customer.entity';
 
 @Entity('addresses')
 export class Address implements IAddress {
@@ -26,4 +28,9 @@ export class Address implements IAddress {
   @ManyToOne(() => Country, { nullable: false })
   @JoinColumn({ name: 'country_id' })
   country: Country;
+
+  // Exclude from automatic serialization
+  @OneToOne(() => Customer, (customer) => customer.address)
+  @Exclude()
+  customer: Customer;
 }
