@@ -12,7 +12,11 @@ async function bootstrap() {
     exclude: [{ path: 'health', method: RequestMethod.GET }],
   });
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+    }),
+  );
 
   app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']);
 

@@ -7,6 +7,7 @@ import { Address } from './entities/address.entity';
 import { City } from './entities/city.entity';
 import { Country } from './entities/country.entity';
 import { State } from './entities/state.entity';
+import { CustomerResolver } from './customer.resolver';
 
 @Module({
   // Import TypeORM module for Customer and Address entities
@@ -16,7 +17,7 @@ import { State } from './entities/state.entity';
   controllers: [CustomerController],
 
   // Provide the CustomerService to be injected where needed
-  providers: [CustomerService],
+  providers: [CustomerService, CustomerResolver],
 
   // Export CustomerService to make it available for other modules
   exports: [CustomerService],

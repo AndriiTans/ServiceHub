@@ -1,16 +1,16 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
-import { CustomerService } from './customer.service';
-import { Customer } from './entities/customer.entity';
-import { CustomerResponseDto } from './dto/customer-response.dto';
+// GraphQL
+import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { plainToInstance } from 'class-transformer';
-import { AddressResponseDto } from './dto/address-response.dto';
-import { CustomerCreateFullAddressDto } from './dto/customer-create.dto';
+import { CustomerService } from './customer.service';
+import { CustomerResponseDto } from './dto/graphql/customer-response.dto';
+import { CustomerCreateFullAddressDto } from './dto/graphql/customer-create.dto';
+import { AddressResponseDto } from './dto/graphql/address-response.dto';
 
-@Controller('customers')
-export class CustomerController {
+@Resolver(() => CustomerResponseDto)
+export class CustomerResolver {
   constructor(private readonly customerService: CustomerService) {}
 
-  @Get()
+  @Query(() => [CustomerResponseDto])
   async getAllCustomers(): Promise<CustomerResponseDto[]> {
     const customers = await this.customerService.getAllCustomers();
 
@@ -40,8 +40,8 @@ export class CustomerController {
     });
   }
 
-  @Get(':id')
-  async getCustomerById(@Param('id') id: number): Promise<CustomerResponseDto> {
+  @Query(() => CustomerResponseDto)
+  async getCustomerById(@Args('id', { type: () => Int }) id: number): Promise<CustomerResponseDto> {
     const customer = await this.customerService.getCustomerById(id);
 
     const addressDto = plainToInstance(AddressResponseDto, {
@@ -60,28 +60,17 @@ export class CustomerController {
     });
   }
 
-  @Post()
-  async createCustomer(@Body() data: Partial<Customer>): Promise<Customer> {
-    return this.customerService.createCustomer(data);
-  }
-
-  @Post('full-address')
+  @Mutation(() => CustomerResponseDto)
   async createCustomerWithFullAddress(
-    @Body() data: CustomerCreateFullAddressDto,
-  ): Promise<Customer> {
-    return this.customerService.createCustomerWithFullAddress(data);
+    @Args('data', { type: () => CustomerCreateFullAddressDto }) data: CustomerCreateFullAddressDto,
+  ): Promise<CustomerResponseDto> {
+    const customer = await this.customerService.createCustomerWithFullAddress(data);
+    return plainToInstance(CustomerResponseDto, customer, { excludeExtraneousValues: true });
   }
 
-  @Put(':id')
-  async updateCustomer(
-    @Param('id') id: number,
-    @Body() data: Partial<Customer>,
-  ): Promise<Customer> {
-    return this.customerService.updateCustomer(id, data);
-  }
-
-  @Delete(':id')
-  async deleteCustomer(@Param('id') id: number): Promise<void> {
-    return this.customerService.deleteCustomer(id);
+  @Mutation(() => Boolean)
+  async deleteCustomer(@Args('id', { type: () => Int }) id: number): Promise<boolean> {
+    await this.customerService.deleteCustomer(id);
+    return true;
   }
 }
