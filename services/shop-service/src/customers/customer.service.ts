@@ -6,6 +6,7 @@ import { Address } from './entities/address.entity';
 import { City } from './entities/city.entity';
 import { Country } from './entities/country.entity';
 import { State } from './entities/state.entity';
+import { CustomerCreateFullAddressDto } from './dto/customer-create.dto';
 
 @Injectable()
 export class CustomerService {
@@ -48,27 +49,27 @@ export class CustomerService {
     return this.customerRepository.save(customer);
   }
 
-  async createCustomerWithFullAddress(data: any): Promise<Customer> {
+  async createCustomerWithFullAddress(data: CustomerCreateFullAddressDto): Promise<Customer> {
     // Create or find the country
     let country = await this.countryRepository.findOne({
-      where: { name: data.address.country.name },
+      where: { name: data.address.country },
     });
     if (!country) {
-      country = this.countryRepository.create({ name: data.address.country.name });
+      country = this.countryRepository.create({ name: data.address.country });
       country = await this.countryRepository.save(country);
     }
 
     // Create or find the state
-    let state = await this.stateRepository.findOne({ where: { name: data.address.state.name } });
+    let state = await this.stateRepository.findOne({ where: { name: data.address.state } });
     if (!state) {
-      state = this.stateRepository.create({ name: data.address.state.name, country });
+      state = this.stateRepository.create({ name: data.address.state, country });
       state = await this.stateRepository.save(state);
     }
 
     // Create or find the city
-    let city = await this.cityRepository.findOne({ where: { name: data.address.city.name } });
+    let city = await this.cityRepository.findOne({ where: { name: data.address.city } });
     if (!city) {
-      city = this.cityRepository.create({ name: data.address.city.name, state, country });
+      city = this.cityRepository.create({ name: data.address.city, state, country });
       city = await this.cityRepository.save(city);
     }
 
@@ -89,7 +90,6 @@ export class CustomerService {
       firstName: data.firstName,
       lastName: data.lastName,
       phoneNumber: data.phoneNumber,
-      role: data.role,
       address: savedAddress,
     });
 
