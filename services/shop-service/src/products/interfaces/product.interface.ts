@@ -10,6 +10,7 @@ export interface IProduct {
   name: string;
   description: string;
   price: number;
+  imageName: string
   shop: IShop | Shop;
   category: Category;
   tags: Tag[];

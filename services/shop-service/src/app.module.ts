@@ -1,9 +1,11 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { getMetadataArgsStorage } from 'typeorm';
 import { TableMetadataArgs } from 'typeorm/metadata-args/TableMetadataArgs';
+import { join } from 'path';
 import { DatabaseConfig } from './config/database.config';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { AppService } from './app.service';
@@ -28,6 +30,10 @@ import { OrderModule } from './orders/order.module';
       // Enables GraphQL Playground for testing the API in development mode only
       // It is turned off in production to prevent exposing sensitive API details
       playground: process.env.NODE_ENV !== 'production',
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
     CustomerModule,
     ShopModule,

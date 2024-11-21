@@ -28,6 +28,9 @@ export class Product implements IProduct {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
+  @Column({type: 'varchar', length: 150})
+  imageName: string
+
   @ManyToOne(() => Shop, (shop) => shop.products)
   shop: Shop;
 
@@ -43,4 +46,9 @@ export class Product implements IProduct {
 
   @OneToMany(() => Rating, (rating) => rating.product, { cascade: true, onDelete: 'CASCADE' })
   ratings: Rating[];
+
+  get imageUrl(): string {
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3003';
+    return `${baseUrl}/uploads/${this.imageName}`;
+  }
 }
