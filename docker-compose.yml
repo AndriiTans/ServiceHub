@@ -146,7 +146,6 @@ services:
   # MongoDB Database Service
   mongodb:
     image: mongo:latest
-    container_name: mongodb
     ports:
       - "${MONGO_PORT}:${MONGO_PORT}"
     environment:
