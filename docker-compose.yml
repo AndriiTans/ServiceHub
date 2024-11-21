@@ -27,8 +27,8 @@ services:
     command: ["/usr/src/app/wait-for-it.sh", "${AUTH_SERVICE_DB_HOST}", "${AUTH_SERVICE_DB_PORT}", "--", "npm", "start"]
     healthcheck:
       test: ["CMD-SHELL", "/usr/src/app/healthcheck.sh"]
-      interval: 1s
-      timeout: 5s
+      interval: 5s
+      timeout: 20s
       retries: 5
 
   # Shop Service
@@ -116,8 +116,55 @@ services:
   #   environment:
   #     - REACT_APP_API_URL=http://shop-service:3003
 
+  # Social Network Service
+  social-network-service:
+    build:
+      context: ./services/social-network-service
+      dockerfile: Dockerfile
+    ports:
+      - "${SOCIAL_NETWORK_SERVICE_PORT}:${SOCIAL_NETWORK_SERVICE_PORT}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${SOCIAL_NETWORK_SERVICE_NODE_ENV}
+      - PORT=${SOCIAL_NETWORK_SERVICE_PORT}
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_SOCIAL_NETWORK_DB}?authSource=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: ["npm", "start"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail http://localhost:${SOCIAL_NETWORK_SERVICE_PORT}/health || exit 1"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+
+  # MongoDB Database Service
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_SOCIAL_NETWORK_DB} # Optional, creates a default database
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mysql_data:
+  mongodb_data:
 
 networks:
   app-network:
