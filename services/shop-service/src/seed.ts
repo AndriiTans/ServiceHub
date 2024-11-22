@@ -196,7 +196,7 @@ export async function seed() {
     const customer = new Customer();
     customer.userId = i;
     customer.email = `customer${i}@example.com`;
-    customer.role = i % 2 === 0 ? UserRole.BUYER : UserRole.SELLER;
+    customer.role = i % 2 === 0 ? UserRole.Member : UserRole.Member;
     customer.firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
     customer.lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
     customer.phoneNumber = `+1-800-${Math.floor(1000000 + Math.random() * 9000000)}`;

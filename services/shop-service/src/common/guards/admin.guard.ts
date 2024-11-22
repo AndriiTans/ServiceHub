@@ -1,4 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, ForbiddenException } from '@nestjs/common';
+import { UserRole } from 'src/customers/enums/role.enum';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
@@ -10,7 +11,7 @@ export class AdminGuard implements CanActivate {
       throw new ForbiddenException('You must be logged in to access this resource.');
     }
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.Admin) {
       throw new ForbiddenException(
         'You do not have the necessary permissions to access this resource.',
       );

@@ -21,7 +21,7 @@ export class Customer implements ICustomer {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.BUYER,
+    default: UserRole.Member,
   })
   role?: UserRole;
 
