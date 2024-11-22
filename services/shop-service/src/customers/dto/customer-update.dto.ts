@@ -10,15 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { AddressDto } from './address-create.dto';
 
-export class CustomerCreateFullAddressDto {
-  @IsNotEmpty()
-  @IsNumber()
-  userId: number;
-
-  @IsEmail({}, { message: 'Invalid email format.' })
-  @IsNotEmpty()
-  email: string;
-
+export class CustomerUpdateDto {
   @IsOptional()
   @IsString()
   firstName?: string;

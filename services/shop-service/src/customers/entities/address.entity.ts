@@ -28,9 +28,4 @@ export class Address implements IAddress {
   @ManyToOne(() => Country, { nullable: false })
   @JoinColumn({ name: 'country_id' })
   country: Country;
-
-  // Exclude from automatic serialization
-  @OneToOne(() => Customer, (customer) => customer.address)
-  @Exclude()
-  customer: Customer;
 }

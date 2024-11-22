@@ -2,8 +2,9 @@
   "name": "service-hub",
   "scripts": {
     "start": "docker-compose up --build",
-    "reset": "docker-compose down -v && docker-compose up --build --force-recreate",
-    "stop": "docker-compose down"
+    "reset": "docker-compose down -v && docker-compose build --no-cache && docker-compose up --force-recreate",
+    "reset-hard": "docker-compose down -v && docker volume prune -f && docker-compose build --no-cache && docker-compose up --force-recreate",
+    "stop": "docker-compose down -v"
   },
   "private": true,
   "workspaces": [

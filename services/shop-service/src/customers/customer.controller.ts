@@ -1,12 +1,16 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, UseGuards, Req } from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { Customer } from './entities/customer.entity';
 import { CustomerResponseDto } from './dto/customer-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { AddressResponseDto } from './dto/address-response.dto';
-import { CustomerCreateFullAddressDto } from './dto/customer-create.dto';
+import { AuthGuard } from 'src/common/guards/auth.guard';
+import { IUser } from './interfaces/user.interface';
+import { CustomerUpdateDto } from './dto/customer-update.dto';
+import { CustomerCreateOrUpdateDto } from './dto/customer-create-or-update.dto';
 
 @Controller('customers')
+@UseGuards(AuthGuard)
 export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
@@ -14,30 +18,34 @@ export class CustomerController {
   async getAllCustomers(): Promise<CustomerResponseDto[]> {
     const customers = await this.customerService.getAllCustomers();
 
-    return customers.map((customer) => {
-      const addressDto = plainToInstance(
-        AddressResponseDto,
-        {
-          street: customer.address?.street,
-          postalCode: customer.address?.postalCode,
-          city: customer.address?.city?.name,
-          state: customer.address?.state?.name,
-          country: customer.address?.country?.name,
-        },
-        { excludeExtraneousValues: true },
-      );
+    if (customers.length > 0) {
+      return customers.map((customer) => {
+        const addressDto = plainToInstance(
+          AddressResponseDto,
+          {
+            street: customer.address?.street,
+            postalCode: customer.address?.postalCode,
+            city: customer.address?.city?.name,
+            state: customer.address?.state?.name,
+            country: customer.address?.country?.name,
+          },
+          { excludeExtraneousValues: true },
+        );
 
-      return plainToInstance(
-        CustomerResponseDto,
-        {
-          id: customer.id,
-          firstName: customer.firstName,
-          email: customer.email,
-          address: addressDto,
-        },
-        { excludeExtraneousValues: true },
-      );
-    });
+        return plainToInstance(
+          CustomerResponseDto,
+          {
+            id: customer.id,
+            firstName: customer.firstName,
+            email: customer.email,
+            address: addressDto,
+          },
+          { excludeExtraneousValues: true },
+        );
+      });
+    }
+
+    return [];
   }
 
   @Get(':id')
@@ -61,27 +69,28 @@ export class CustomerController {
   }
 
   @Post()
-  async createCustomer(@Body() data: Partial<Customer>): Promise<Customer> {
-    return this.customerService.createCustomer(data);
-  }
+  async createOrUpdateCustomer(@Req() req, @Body() data: CustomerUpdateDto): Promise<Customer> {
+    const user: IUser = req.user;
 
-  @Post('full-address')
-  async createCustomerWithFullAddress(
-    @Body() data: CustomerCreateFullAddressDto,
-  ): Promise<Customer> {
-    return this.customerService.createCustomerWithFullAddress(data);
+    const customerDto: CustomerCreateOrUpdateDto = {
+      ...data,
+      userId: user.id,
+      email: user.email,
+    };
+
+    return this.customerService.createOrUpdateCustomer(customerDto);
   }
 
   @Put(':id')
   async updateCustomer(
     @Param('id') id: number,
-    @Body() data: Partial<Customer>,
+    @Body() data: CustomerUpdateDto,
   ): Promise<Customer> {
     return this.customerService.updateCustomer(id, data);
   }
 
   @Delete(':id')
-  async deleteCustomer(@Param('id') id: number): Promise<void> {
+  async deleteCustomer(@Param('id') id: number): Promise<boolean> {
     return this.customerService.deleteCustomer(id);
   }
 }

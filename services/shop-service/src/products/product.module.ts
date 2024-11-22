@@ -12,6 +12,6 @@ import { Tag } from './entities/tag.entity';
   imports: [TypeOrmModule.forFeature([Product, Category, Comment, Rating, Tag])],
   controllers: [ProductController],
   providers: [ProductService],
-  exports: [ProductService],
+  exports: [TypeOrmModule, ProductService],
 })
 export class ProductModule {}

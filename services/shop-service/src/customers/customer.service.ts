@@ -1,12 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { Address } from './entities/address.entity';
 import { City } from './entities/city.entity';
 import { Country } from './entities/country.entity';
 import { State } from './entities/state.entity';
 import { CustomerCreateFullAddressDto } from './dto/customer-create.dto';
+import { AddressDto } from './dto/address-create.dto';
+import { TypeOrmHelperService } from 'src/shared/typeorm-helper.service';
+import { CustomerSyncDto } from './dto/customer-sync.dto';
+import { CustomerUpdateDto } from './dto/customer-update.dto';
+import { CustomerCreateOrUpdateDto } from './dto/customer-create-or-update.dto';
 
 @Injectable()
 export class CustomerService {
@@ -21,20 +26,13 @@ export class CustomerService {
     private readonly stateRepository: Repository<State>,
     @InjectRepository(Country)
     private readonly countryRepository: Repository<Country>,
+    private readonly typeOrmHelperService: TypeOrmHelperService,
   ) {}
 
   async getAllCustomers(): Promise<Customer[]> {
     return this.customerRepository.find({
       relations: ['address', 'address.city', 'address.state', 'address.country'],
     });
-
-    // return this.customerRepository
-    // .createQueryBuilder('customer')
-    // .leftJoinAndSelect('customer.address', 'address')
-    // .leftJoinAndSelect('address.city', 'city')
-    // .leftJoinAndSelect('address.state', 'state')
-    // .leftJoinAndSelect('address.country', 'country')
-    // .getMany();
   }
 
   async getCustomerById(id: number): Promise<Customer> {
@@ -44,64 +42,144 @@ export class CustomerService {
     });
   }
 
-  async createCustomer(data: Partial<Customer>): Promise<Customer> {
-    const customer = this.customerRepository.create(data);
-    return this.customerRepository.save(customer);
+  async createOrUpdateCustomer(data: CustomerCreateOrUpdateDto): Promise<Customer> {
+    try {
+      const { userId, email, ...otherUserData } = data;
+
+      if (!userId) {
+        throw new BadRequestException('userId is required and cannot be undefined.');
+      }
+      const customer = await this.customerRepository.findOne({ where: { userId } });
+
+      if (!customer) {
+        return this.createCustomer({ userId, email, ...data });
+      }
+
+      return this.updateCustomer(customer.id, { ...otherUserData });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async createCustomerWithFullAddress(data: CustomerCreateFullAddressDto): Promise<Customer> {
-    // Create or find the country
-    let country = await this.countryRepository.findOne({
-      where: { name: data.address.country },
-    });
-    if (!country) {
-      country = this.countryRepository.create({ name: data.address.country });
-      country = await this.countryRepository.save(country);
-    }
+  async syncCustomer(userId: number, data: CustomerSyncDto): Promise<Customer> {
+    try {
+      const existingCustomer = await this.customerRepository.findOne({ where: { userId } });
+      if (!existingCustomer) {
+        throw new BadRequestException(`Customer with userId ${userId} not found.`);
+      }
 
-    // Create or find the state
-    let state = await this.stateRepository.findOne({ where: { name: data.address.state } });
-    if (!state) {
-      state = this.stateRepository.create({ name: data.address.state, country });
-      state = await this.stateRepository.save(state);
-    }
+      Object.assign(existingCustomer, data);
 
-    // Create or find the city
-    let city = await this.cityRepository.findOne({ where: { name: data.address.city } });
-    if (!city) {
-      city = this.cityRepository.create({ name: data.address.city, state, country });
-      city = await this.cityRepository.save(city);
+      return await this.customerRepository.save(existingCustomer);
+    } catch (error) {
+      console.error('Failed to update customer:', error);
+      throw new BadRequestException('Failed to update customer');
     }
+  }
 
-    // Create the address
-    const address = this.addressRepository.create({
-      street: data.address.street,
-      postalCode: data.address.postalCode,
+  async createCustomer(data: CustomerCreateFullAddressDto): Promise<Customer> {
+    try {
+      let address = null;
+      if (data?.address) {
+        address = await this.createOrUpdateAddress(data.address);
+      }
+
+      const customer = this.customerRepository.create({
+        userId: data.userId,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        phoneNumber: data.phoneNumber,
+        address,
+      });
+
+      return await this.customerRepository.save(customer);
+    } catch (error) {
+      console.error('Failed to save customer:', error);
+      throw new Error('Failed to save customer');
+    }
+  }
+
+  async updateCustomer(id: number, data: CustomerUpdateDto): Promise<Customer> {
+    try {
+      const { address: addressDto, ...customerData } = data;
+
+      const existingCustomer = await this.getCustomerById(id);
+      if (!existingCustomer) {
+        throw new BadRequestException(`Customer with id ${id} not found`);
+      }
+
+      if (addressDto) {
+        const updatedAddress = await this.createOrUpdateAddress(
+          addressDto,
+          existingCustomer.address,
+        );
+        existingCustomer.address = updatedAddress;
+      }
+
+      Object.assign(existingCustomer, customerData);
+
+      return await this.customerRepository.save(existingCustomer);
+    } catch (error) {
+      console.error('Failed to update customer:', error);
+      throw new BadRequestException('Failed to update customer');
+    }
+  }
+
+  private async createOrUpdateAddress(
+    addressDto: Partial<AddressDto>,
+    existingAddress?: Address,
+  ): Promise<Address> {
+    const country = await this.typeOrmHelperService.findOrCreate(
+      this.countryRepository,
+      { name: addressDto.country },
+      { name: addressDto.country },
+    );
+    const state = await this.typeOrmHelperService.findOrCreate(
+      this.stateRepository,
+      { name: addressDto.state },
+      { name: addressDto.state, country },
+    );
+    const city = await this.typeOrmHelperService.findOrCreate(
+      this.cityRepository,
+      { name: addressDto.city },
+      { name: addressDto.city, state, country },
+    );
+
+    const addressData: DeepPartial<Address> = {
+      ...existingAddress,
+      street: addressDto.street,
+      postalCode: addressDto.postalCode,
       city,
       state,
       country,
-    });
-    const savedAddress = await this.addressRepository.save(address);
+    };
 
-    // Create the customer with the address
-    const customer = this.customerRepository.create({
-      userId: data.userId,
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phoneNumber: data.phoneNumber,
-      address: savedAddress,
-    });
-
-    return this.customerRepository.save(customer);
+    return existingAddress
+      ? this.addressRepository.save(addressData)
+      : this.addressRepository.save(this.addressRepository.create(addressData));
   }
 
-  async updateCustomer(id: number, data: Partial<Customer>): Promise<Customer> {
-    await this.customerRepository.update(id, data);
-    return this.getCustomerById(id);
-  }
+  async deleteCustomer(id: number): Promise<boolean> {
+    try {
+      const customer = await this.customerRepository.findOne({
+        where: { id },
+        relations: ['address'],
+      });
 
-  async deleteCustomer(id: number): Promise<void> {
-    await this.customerRepository.delete(id);
+      if (customer) {
+        await this.customerRepository.remove(customer);
+
+        if (customer.address) {
+          await this.addressRepository.delete(customer.address.id);
+        }
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Failed to delete customer:', error);
+      throw new BadRequestException('Failed to delete customer');
+    }
   }
 }

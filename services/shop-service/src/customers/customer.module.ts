@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SharedModule } from 'src/shared/shared.module';
 import { CustomerService } from './customer.service';
 import { CustomerController } from './customer.controller';
 import { Customer } from './entities/customer.entity';
@@ -11,7 +12,7 @@ import { CustomerResolver } from './customer.resolver';
 
 @Module({
   // Import TypeORM module for Customer and Address entities
-  imports: [TypeOrmModule.forFeature([Customer, Address, City, State, Country])],
+  imports: [TypeOrmModule.forFeature([Customer, Address, City, State, Country]), SharedModule],
 
   // Register the controller to handle HTTP requests for Customer
   controllers: [CustomerController],
@@ -20,6 +21,6 @@ import { CustomerResolver } from './customer.resolver';
   providers: [CustomerService, CustomerResolver],
 
   // Export CustomerService to make it available for other modules
-  exports: [CustomerService],
+  exports: [TypeOrmModule, CustomerService],
 })
 export class CustomerModule {}

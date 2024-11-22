@@ -61,10 +61,10 @@ export class CustomerResolver {
   }
 
   @Mutation(() => CustomerResponseDto)
-  async createCustomerWithFullAddress(
+  async createCustomer(
     @Args('data', { type: () => CustomerCreateFullAddressDto }) data: CustomerCreateFullAddressDto,
   ): Promise<CustomerResponseDto> {
-    const customer = await this.customerService.createCustomerWithFullAddress(data);
+    const customer = await this.customerService.createCustomer(data);
     return plainToInstance(CustomerResponseDto, customer, { excludeExtraneousValues: true });
   }
 

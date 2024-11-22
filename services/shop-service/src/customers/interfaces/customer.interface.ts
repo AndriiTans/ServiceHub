@@ -5,7 +5,7 @@ export interface ICustomer {
   id: number;
   userId: number;
   email: string;
-  role: UserRole;
+  role?: UserRole;
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
