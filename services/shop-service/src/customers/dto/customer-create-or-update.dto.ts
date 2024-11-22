@@ -10,7 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { AddressDto } from './address-create.dto';
 
-export class CustomerCreateFullAddressDto {
+export class CustomerCreateOrUpdateDto {
   @IsNotEmpty()
   @IsNumber()
   userId: number;

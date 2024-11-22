@@ -10,6 +10,10 @@ router.get('/verify-token', authMiddleware, (req, res) => {
   res.json({ isValid: true, user: req.user });
 });
 
+router.post('/verify-token', authMiddleware, (req, res) => {
+  res.json({ isValid: true, user: req.user });
+});
+
 router.get('/id/:id', UserController.getUserById);
 
 router.get('/email/:email', UserController.getUserByEmail);

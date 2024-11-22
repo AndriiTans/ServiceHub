@@ -12,18 +12,18 @@ export class Customer implements ICustomer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int', unique: true })
+  @Column({ type: 'int', unique: true, nullable: true })
   userId: number;
 
-  @Column({ type: 'varchar', length: 150 })
+  @Column({ type: 'varchar', unique: true, length: 150 })
   email: string;
 
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.BUYER,
+    default: UserRole.Member,
   })
-  role: UserRole;
+  role?: UserRole;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   firstName: string;
