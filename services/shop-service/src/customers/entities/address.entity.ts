@@ -28,4 +28,10 @@ export class Address implements IAddress {
   @ManyToOne(() => Country, { nullable: false })
   @JoinColumn({ name: 'country_id' })
   country: Country;
+
+  @OneToOne(() => Customer, (customer) => customer.address, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'customer_id' })
+  customer: Customer;
 }

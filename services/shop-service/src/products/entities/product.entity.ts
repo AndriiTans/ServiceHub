@@ -6,6 +6,7 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  JoinColumn,
 } from 'typeorm';
 import { Shop } from 'src/shops/entities/shop.entity';
 import { IProduct } from '../interfaces/product.interface';
@@ -28,23 +29,25 @@ export class Product implements IProduct {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  @Column({type: 'varchar', length: 150})
-  imageName: string
+  @Column({ type: 'varchar', length: 150 })
+  imageName: string;
 
-  @ManyToOne(() => Shop, (shop) => shop.products)
+  @ManyToOne(() => Shop, (shop) => shop.products, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'shop_id' })
   shop: Shop;
 
   @ManyToOne(() => Category, (category) => category.products)
+  @JoinColumn({ name: 'category_id' })
   category: Category;
 
   @ManyToMany(() => Tag, (tag) => tag.products, { cascade: ['remove'] })
   @JoinTable({ name: 'products_tags' })
   tags: Tag[];
 
-  @OneToMany(() => Comment, (comment) => comment.product, { cascade: true, onDelete: 'CASCADE' })
+  @OneToMany(() => Comment, (comment) => comment.product, { cascade: true })
   comments: Comment[];
 
-  @OneToMany(() => Rating, (rating) => rating.product, { cascade: true, onDelete: 'CASCADE' })
+  @OneToMany(() => Rating, (rating) => rating.product, { cascade: true })
   ratings: Rating[];
 
   get imageUrl(): string {

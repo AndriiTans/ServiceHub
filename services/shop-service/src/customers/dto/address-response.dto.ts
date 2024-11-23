@@ -1,4 +1,19 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+
+export class CityResponseDto {
+  @Expose()
+  name: string;
+}
+
+export class StateResponseDto {
+  @Expose()
+  name: string;
+}
+
+export class CountryResponseDto {
+  @Expose()
+  name: string;
+}
 
 export class AddressResponseDto {
   @Expose()
@@ -8,11 +23,14 @@ export class AddressResponseDto {
   postalCode: string;
 
   @Expose()
-  city: string;
+  @Type(() => CityResponseDto)
+  city: CityResponseDto;
 
   @Expose()
-  state: string;
+  @Type(() => StateResponseDto)
+  state: StateResponseDto;
 
   @Expose()
-  country: string;
+  @Type(() => CountryResponseDto)
+  country: CountryResponseDto;
 }

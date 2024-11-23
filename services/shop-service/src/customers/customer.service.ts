@@ -35,14 +35,9 @@ export class CustomerService {
   ) {}
 
   async getAllCustomers(): Promise<Customer[]> {
-    try {
-      return await this.customerRepository.find({
-        relations: ['address', 'address.city', 'address.state', 'address.country'],
-      });
-    } catch (error) {
-      console.error('Failed to fetch customers:', error);
-      throw new InternalServerErrorException('Failed to fetch customers.');
-    }
+    return this.customerRepository.find({
+      relations: ['address', 'address.city', 'address.state', 'address.country'],
+    });
   }
 
   async getCustomerById(id: number): Promise<Customer> {
@@ -59,6 +54,27 @@ export class CustomerService {
       return customer;
     } catch (error) {
       console.error(`Error fetching customer with ID ${id}:`, error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('An error occurred while fetching the customer.');
+    }
+  }
+
+  async getCustomerByUserId(userId: number): Promise<Customer> {
+    try {
+      const customer = await this.customerRepository.findOne({
+        where: { userId },
+        relations: ['address', 'address.city', 'address.state', 'address.country'],
+      });
+
+      if (!customer) {
+        throw new NotFoundException(`Customer with userId ${userId} not found.`);
+      }
+
+      return customer;
+    } catch (error) {
+      console.error(`Error fetching customer with userId ${userId}:`, error);
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -104,21 +120,21 @@ export class CustomerService {
 
   async createCustomer(data: CustomerCreateFullAddressDto): Promise<Customer> {
     try {
-      let address = null;
-      if (data?.address) {
-        address = await this.createOrUpdateAddress(data.address);
-      }
-
       const customer = this.customerRepository.create({
         userId: data.userId,
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         phoneNumber: data.phoneNumber,
-        address,
       });
 
-      return await this.customerRepository.save(customer);
+      const savedCustomer = await this.customerRepository.save(customer);
+
+      if (data?.address) {
+        await this.createOrUpdateAddress(data.address, savedCustomer);
+      }
+
+      return savedCustomer;
     } catch (error) {
       console.error('Failed to create customer:', error);
       throw new InternalServerErrorException('Failed to create customer.');
@@ -127,32 +143,65 @@ export class CustomerService {
 
   async updateCustomer(id: number, data: CustomerUpdateDto): Promise<Customer> {
     try {
-      const { address: addressDto, ...customerData } = data;
+      const existingCustomer = await this.customerRepository.findOne({
+        where: { id },
+      });
 
-      const existingCustomer = await this.getCustomerById(id);
       if (!existingCustomer) {
         throw new NotFoundException(`Customer with id ${id} not found`);
       }
 
-      if (addressDto) {
-        const updatedAddress = await this.createOrUpdateAddress(
-          addressDto,
-          existingCustomer.address,
-        );
-        existingCustomer.address = updatedAddress;
+      const address = await this.addressRepository.findOne({
+        where: { customer: { id: existingCustomer.id } },
+      });
+
+      const { address: addressUpdateDto, ...customerUpdateDto } = data;
+
+      if (data.address) {
+        await this.createOrUpdateAddress(addressUpdateDto, existingCustomer, address);
       }
 
-      Object.assign(existingCustomer, customerData);
+      Object.assign(existingCustomer, customerUpdateDto);
 
-      return await this.customerRepository.save(existingCustomer);
+      return this.customerRepository.save(existingCustomer);
     } catch (error) {
       console.error('Failed to update customer:', error);
       throw new InternalServerErrorException('Failed to update customer.');
     }
   }
 
+  async updateCustomerByUserId(userId: number, data: CustomerUpdateDto): Promise<Customer> {
+    try {
+      const existingCustomer = await this.customerRepository.findOne({
+        where: { userId },
+      });
+
+      if (!existingCustomer) {
+        throw new NotFoundException(`Customer with userId ${userId} not found`);
+      }
+
+      const address = await this.addressRepository.findOne({
+        where: { customer: { id: existingCustomer.id } },
+      });
+
+      const { address: addressUpdateDto, ...customerUpdateDto } = data;
+
+      if (data.address) {
+        await this.createOrUpdateAddress(addressUpdateDto, existingCustomer, address);
+      }
+
+      Object.assign(existingCustomer, customerUpdateDto);
+
+      return this.customerRepository.save(existingCustomer);
+    } catch (error) {
+      console.error('Failed to update customer:', error);
+      throw new InternalServerErrorException('Failed to update customer.', error.message);
+    }
+  }
+
   private async createOrUpdateAddress(
-    addressDto: Partial<AddressDto>,
+    addressDto: AddressDto,
+    customer: Customer,
     existingAddress?: Address,
   ): Promise<Address> {
     try {
@@ -172,43 +221,39 @@ export class CustomerService {
         { name: addressDto.city, state, country },
       );
 
-      const addressData: DeepPartial<Address> = {
+      const addressData = {
         ...existingAddress,
         street: addressDto.street,
         postalCode: addressDto.postalCode,
         city,
         state,
         country,
+        // customer,
       };
 
-      return existingAddress
-        ? this.addressRepository.save(addressData)
-        : this.addressRepository.save(this.addressRepository.create(addressData));
+      if (existingAddress) {
+        return this.addressRepository.save(addressData);
+      } else {
+        addressData.customer = customer;
+
+        return this.addressRepository.save(this.addressRepository.create(addressData));
+      }
     } catch (error) {
       throw new InternalServerErrorException('Failed to create or update address.');
     }
   }
 
   async deleteCustomer(id: number): Promise<boolean> {
-    try {
-      const customer = await this.customerRepository.findOne({
-        where: { id },
-        relations: ['address'],
-      });
+    const customer = await this.customerRepository.findOne({
+      where: { id },
+      relations: ['address'],
+    });
 
-      if (customer) {
-        await this.customerRepository.remove(customer);
-
-        if (customer.address) {
-          await this.addressRepository.delete(customer.address.id);
-        }
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Failed to delete customer:', error);
-      throw new InternalServerErrorException('Failed to delete customer.');
+    if (customer) {
+      await this.customerRepository.remove(customer);
+      return true;
     }
+
+    return false;
   }
 }

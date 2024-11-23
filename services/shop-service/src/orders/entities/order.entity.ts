@@ -23,13 +23,12 @@ export class Order implements IOrder {
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
-  @ManyToOne(() => Shop, (shop) => shop.orders, { nullable: false })
+  @ManyToOne(() => Shop, (shop) => shop.orders, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'shop_id' })
   shop: Shop;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
     cascade: true,
-    onDelete: 'CASCADE',
   })
   items: OrderItem[];
 

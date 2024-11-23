@@ -15,12 +15,11 @@ export class Shop implements IShop {
   @Column({ type: 'varchar', length: 150 })
   description: string;
 
-  @OneToOne(() => Customer, (customer) => customer.shop)
-  @Column({ type: 'int', unique: true })
+  @OneToOne(() => Customer, (customer) => customer.shop, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
   owner: Customer;
 
-  @OneToMany(() => Product, (product) => product.shop, { cascade: true, onDelete: 'CASCADE' })
+  @OneToMany(() => Product, (product) => product.shop, { cascade: true })
   products: Product[];
 
   @Column({ type: 'int' })
@@ -32,7 +31,7 @@ export class Shop implements IShop {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @OneToMany(() => Order, (order) => order.shop, { cascade: true, onDelete: 'CASCADE' })
+  @OneToMany(() => Order, (order) => order.shop, { cascade: true })
   orders: Order[];
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
