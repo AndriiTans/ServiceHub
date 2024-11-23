@@ -11,7 +11,8 @@ export class Comment implements IComment {
   @Column({ type: 'text' })
   content: string;
 
-  @ManyToOne(() => Product, (product) => product.comments, { nullable: false })
+  @ManyToOne(() => Product, (product) => product.comments, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'product_id' })
   product: Product;
 
   @ManyToOne(() => Customer, (customer) => customer.comments, { nullable: false })

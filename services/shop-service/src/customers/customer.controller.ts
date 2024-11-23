@@ -21,6 +21,7 @@ import { IUser } from './interfaces/user.interface';
 import { CustomerUpdateDto } from './dto/customer-update.dto';
 import { CustomerCreateOrUpdateDto } from './dto/customer-create-or-update.dto';
 import { AdminOrOwnershipGuard } from 'src/common/guards/admin-or-ownership.guard';
+import { AuthenticatedRequest } from 'src/common/types/authenticated-request.interface';
 
 @Controller('customers')
 @UseGuards(AuthGuard)
@@ -32,34 +33,7 @@ export class CustomerController {
     try {
       const customers = await this.customerService.getAllCustomers();
 
-      if (customers.length > 0) {
-        return customers.map((customer) => {
-          const addressDto = plainToInstance(
-            AddressResponseDto,
-            {
-              street: customer.address?.street,
-              postalCode: customer.address?.postalCode,
-              city: customer.address?.city?.name,
-              state: customer.address?.state?.name,
-              country: customer.address?.country?.name,
-            },
-            { excludeExtraneousValues: true },
-          );
-
-          return plainToInstance(
-            CustomerResponseDto,
-            {
-              id: customer.id,
-              firstName: customer.firstName,
-              email: customer.email,
-              address: addressDto,
-            },
-            { excludeExtraneousValues: true },
-          );
-        });
-      }
-
-      return [];
+      return plainToInstance(CustomerResponseDto, customers, { excludeExtraneousValues: true });
     } catch (error) {
       throw new HttpException('Failed to fetch customers.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
@@ -93,7 +67,10 @@ export class CustomerController {
   }
 
   @Post()
-  async createOrUpdateCustomer(@Req() req, @Body() data: CustomerUpdateDto): Promise<Customer> {
+  async createOrUpdateCustomer(
+    @Req() req: AuthenticatedRequest,
+    @Body() data: CustomerUpdateDto,
+  ): Promise<Customer> {
     try {
       const user: IUser = req.user;
 
@@ -109,6 +86,20 @@ export class CustomerController {
         'Failed to create or update customer.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Put()
+  async updateCustomerByUserId(
+    @Req() req: AuthenticatedRequest,
+    @Body() data: CustomerUpdateDto,
+  ): Promise<Customer> {
+    try {
+      const user: IUser = req.user;
+
+      return await this.customerService.updateCustomerByUserId(user.id, data);
+    } catch (error) {
+      throw new HttpException('Failed to update the customer.', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 

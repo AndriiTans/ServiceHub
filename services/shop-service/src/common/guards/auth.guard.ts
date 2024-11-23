@@ -6,6 +6,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import axios from 'axios';
+import { Request } from 'express';
 import { IUser } from 'src/customers/interfaces/user.interface';
 
 const AUTH_SERVICE_URL = process.env.AUTH_SERVICE_URL;
@@ -30,7 +31,7 @@ export class AuthGuard implements CanActivate {
 
       const { user, isValid }: { user: IUser; isValid: boolean } = response.data || {};
 
-      if (!user || !isValid) {
+      if (!user?.id || !user.email || !isValid) {
         throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
       }
 
@@ -49,7 +50,7 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private extractTokenFromHeader(request: any): string | null {
+  private extractTokenFromHeader(request: Request): string | null {
     const authHeader = request.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return authHeader.split(' ')[1]; // Extract the token

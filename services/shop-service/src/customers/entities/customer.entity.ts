@@ -34,12 +34,16 @@ export class Customer implements ICustomer {
   @Column({ type: 'varchar', length: 50, nullable: true })
   phoneNumber: string;
 
-  @OneToOne(() => Address, { nullable: true, cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'address_id' })
+  @OneToOne(() => Address, (address) => address.customer, {
+    nullable: true,
+    cascade: true,
+  })
   address: Address;
 
-  @OneToOne(() => Address, { nullable: true, cascade: true, onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'shop_id' })
+  @OneToOne(() => Shop, (shop) => shop.owner, {
+    nullable: true,
+    cascade: true,
+  })
   shop: Shop;
 
   @OneToMany(() => Comment, (comment) => comment.author)

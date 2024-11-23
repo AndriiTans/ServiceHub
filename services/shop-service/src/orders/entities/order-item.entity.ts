@@ -8,7 +8,7 @@ export class OrderItem implements IOrderItem {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Order, (order) => order.items, { nullable: false })
+  @ManyToOne(() => Order, (order) => order.items, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 
