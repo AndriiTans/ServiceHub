@@ -29,7 +29,7 @@ export class Product implements IProduct {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price: number;
 
-  @Column({ type: 'varchar', length: 150 })
+  @Column({ type: 'varchar', length: 150, nullable: true })
   imageName: string;
 
   @ManyToOne(() => Shop, (shop) => shop.products, { onDelete: 'CASCADE' })
@@ -51,6 +51,9 @@ export class Product implements IProduct {
   ratings: Rating[];
 
   get imageUrl(): string {
+    if (!this.imageName) {
+      return null;
+    }
     const baseUrl = process.env.BASE_URL || 'http://localhost:3003';
     return `${baseUrl}/uploads/${this.imageName}`;
   }
