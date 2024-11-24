@@ -2,6 +2,7 @@ import { Expose, Type } from 'class-transformer';
 import { ShopResponseDto } from 'src/shops/dto/shop-response.dto';
 import { CategoryResponseDto } from './category-response.dto';
 import { TagResponseDto } from './tag-response.dto';
+import { CommentResponseDto } from './comment-response.dto';
 
 export class ProductResponseDto {
   @Expose()
@@ -31,11 +32,17 @@ export class ProductResponseDto {
   @Type(() => TagResponseDto)
   tags: TagResponseDto[];
 
-  //   @Expose()
-  //   @Type(() => CommentResponseDto)
-  //   comments: CommentResponseDto[];
+  @Expose()
+  @Type(() => CommentResponseDto)
+  comments: CommentResponseDto[];
 
   //   @Expose()
   //   @Type(() => RatingResponseDto)
   //   ratings: RatingResponseDto[];
+
+  @Expose()
+  createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 }

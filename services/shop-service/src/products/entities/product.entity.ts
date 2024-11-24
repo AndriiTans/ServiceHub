@@ -36,7 +36,7 @@ export class Product implements IProduct {
   @JoinColumn({ name: 'shop_id' })
   shop: Shop;
 
-  @ManyToOne(() => Category, (category) => category.products)
+  @ManyToOne(() => Category, (category) => category.products, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
@@ -49,6 +49,12 @@ export class Product implements IProduct {
 
   @OneToMany(() => Rating, (rating) => rating.product, { cascade: true })
   ratings: Rating[];
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 
   get imageUrl(): string {
     if (!this.imageName) {

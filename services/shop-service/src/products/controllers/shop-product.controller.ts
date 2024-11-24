@@ -1,10 +1,12 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
-import { ProductService } from './product.service';
-import { ProductCreateDto } from './dto/product-create.dto';
-import { ProductResponseDto } from './dto/product-response.dto';
+import { AuthGuard } from 'src/common/guards/auth.guard';
+import { ProductService } from '../product.service';
+import { ProductCreateDto } from '../dto/product-create.dto';
+import { ProductResponseDto } from '../dto/product-response.dto';
 
 @Controller('shops/:shopId/products')
+@UseGuards(AuthGuard)
 export class ShopProductController {
   constructor(private readonly productService: ProductService) {}
 

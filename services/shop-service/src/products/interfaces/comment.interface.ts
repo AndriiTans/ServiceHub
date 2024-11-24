@@ -4,7 +4,7 @@ import { Comment } from '../entities/comment.entity';
 
 export class IComment {
   id: number;
-  content: string;
+  message: string;
   product: Product;
   author: Customer;
   parentComment: Comment;

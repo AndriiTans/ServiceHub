@@ -9,7 +9,7 @@ export class Comment implements IComment {
   id: number;
 
   @Column({ type: 'text' })
-  content: string;
+  message: string;
 
   @ManyToOne(() => Product, (product) => product.comments, { nullable: false, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'product_id' })
@@ -28,4 +28,10 @@ export class Comment implements IComment {
 
   @OneToMany(() => Comment, (comment) => comment.parentComment)
   replies: Comment[];
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
 }
