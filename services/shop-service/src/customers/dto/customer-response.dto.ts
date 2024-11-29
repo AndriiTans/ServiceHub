@@ -1,9 +1,8 @@
 import { Expose, Type } from 'class-transformer';
-import { Address } from '../entities/address.entity';
 import { AddressResponseDto } from './address-response.dto';
 
 export class CustomerResponseDto {
-  //   @Expose()
+  @Expose()
   id: number;
 
   @Expose()
