@@ -13,6 +13,8 @@ import { Comment } from './entities/comment.entity';
 import { TagCreateOrUpdateDto } from './dto/tag-create-or-update.dto';
 import { ProductUpdateDto } from './dto/product-update.dto';
 import { CommentCreateDto } from './dto/comment-create.dto';
+import { RatingCreateOrUpdateDto } from './dto/rating-create-or-update.dto';
+import { Rating } from './entities/rating.entity';
 
 @Injectable()
 export class ProductService {
@@ -27,6 +29,8 @@ export class ProductService {
     private readonly tagRepository: Repository<Tag>,
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Rating)
+    private readonly ratingRepository: Repository<Rating>,
   ) {}
 
   async createProduct(shopId: number, createProductInput: ProductCreateDto) {
@@ -99,7 +103,7 @@ export class ProductService {
   async getAllProductsByShopId(shopId: number): Promise<Product[]> {
     return this.productRepository.find({
       where: { shop: { id: shopId } },
-      relations: ['category', 'tags', 'comment'],
+      relations: ['category', 'tags', 'comments'],
     });
   }
 
@@ -206,6 +210,7 @@ export class ProductService {
       relations: ['author', 'replies', 'replies.author'],
     });
   }
+
   async createComment(authorId: number, productId: number, commentCreateDto: CommentCreateDto) {
     const { parentCommentId, ...otherCommentCreateDto } = commentCreateDto;
 
@@ -239,6 +244,62 @@ export class ProductService {
     }
 
     await this.commentRepository.remove(existingComment);
+
+    return true;
+  }
+
+  async getRatingsByProductId(productId: number): Promise<Rating[]> {
+    return this.ratingRepository.find({
+      where: {
+        product: { id: productId },
+      },
+    });
+  }
+
+  async createRating(
+    authorId: number,
+    productId: number,
+    ratingCreateDto: RatingCreateOrUpdateDto,
+  ) {
+    try {
+      const { score, comment } = ratingCreateDto;
+
+      const newRating = this.ratingRepository.create({
+        score,
+        comment,
+        author: { id: authorId },
+        product: { id: productId },
+      });
+
+      return await this.ratingRepository.save(newRating);
+    } catch (error) {
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new BadRequestException('You have already rated this product.');
+      }
+      throw error;
+    }
+  }
+
+  async updateRating(ratingId: number, ratingUpdateDto: RatingCreateOrUpdateDto) {
+    const existingRating = await this.ratingRepository.findOne({ where: { id: ratingId } });
+
+    if (!existingRating) {
+      throw new BadRequestException(`Rating with ID ${ratingId} doesn't exist.`);
+    }
+
+    Object.assign(existingRating, ratingUpdateDto);
+
+    return this.ratingRepository.save(existingRating);
+  }
+
+  async removeRating(ratingId: number) {
+    const existingRating = await this.ratingRepository.findOne({ where: { id: ratingId } });
+
+    if (!existingRating) {
+      throw new BadRequestException(`Rating with ID ${ratingId} doesn't exist.`);
+    }
+
+    await this.ratingRepository.remove(existingRating);
 
     return true;
   }

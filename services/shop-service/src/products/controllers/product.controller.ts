@@ -29,6 +29,8 @@ import { ProductUpdateDto } from '../dto/product-update.dto';
 import { CommentResponseDto } from '../dto/comment-response.dto';
 import { CommentCreateDto } from '../dto/comment-create.dto';
 import { CommentUpdateDto } from '../dto/comment-update.dto';
+import { RatingResponseDto } from '../dto/rating-response.dto';
+import { RatingCreateOrUpdateDto } from '../dto/rating-create-or-update.dto';
 
 @Controller('products')
 @UseGuards(AuthGuard)
@@ -164,5 +166,49 @@ export class ProductController {
     const comment = await this.productService.updateComment(commentId, commentUpdateDto);
 
     return plainToInstance(CommentResponseDto, comment, { excludeExtraneousValues: true });
+  }
+
+  @Delete('comments/:commentId')
+  async removeCommentById(@Param('commentId') commentId: number): Promise<boolean> {
+    return await this.productService.removeComment(commentId);
+  }
+
+  @Get(':productId/ratings')
+  async getAllRatingsByProductId(
+    @Param('productId') productId: number,
+  ): Promise<RatingResponseDto[]> {
+    const ratings = await this.productService.getRatingsByProductId(productId);
+
+    return plainToInstance(RatingResponseDto, ratings, { excludeExtraneousValues: true });
+  }
+
+  @Post(':productId/ratings')
+  async createRating(
+    @Req() req: AuthenticatedRequest,
+    @Param('productId') productId: number,
+    @Body() ratingCreateDto: RatingCreateOrUpdateDto,
+  ): Promise<RatingResponseDto> {
+    const user = req.user;
+
+    const customer = await this.customerService.getCustomerByUserId(user.id);
+
+    const rating = await this.productService.createRating(customer.id, productId, ratingCreateDto);
+
+    return plainToInstance(RatingResponseDto, rating, { excludeExtraneousValues: true });
+  }
+
+  @Put('ratings/:ratingId')
+  async updateRating(
+    @Param('ratingId') ratingId: number,
+    @Body() ratingUpdateDto: RatingCreateOrUpdateDto,
+  ): Promise<RatingResponseDto> {
+    const rating = await this.productService.updateRating(ratingId, ratingUpdateDto);
+
+    return plainToInstance(RatingResponseDto, rating, { excludeExtraneousValues: true });
+  }
+
+  @Delete('ratings/:ratingId')
+  async removeRatingById(@Param('ratingId') ratingId: number): Promise<boolean> {
+    return await this.productService.removeRating(ratingId);
   }
 }
