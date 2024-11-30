@@ -58,9 +58,13 @@ jobs:
       - name: Package Lambda Functions
         working-directory: services
         run: |
-          cd auth-service && zip -r auth-service.zip .
+          cd auth-service
+          npm install --only=production
+          zip -r auth-service.zip index.js node_modules package.json
           mv auth-service.zip ../../infrastructure/lambda/auth-service.zip
-          cd ../shop-service && zip -r shop-service.zip .
+          cd ../shop-service
+          npm install --only=production
+          zip -r shop-service.zip index.js node_modules package.json
           mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
 
       # Set up Terraform
