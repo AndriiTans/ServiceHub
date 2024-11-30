@@ -19,6 +19,8 @@ jobs:
       TF_WORKING_DIR: infrastructure
 
     steps:
+      - name: Print all environment variables
+        run: printenv
       - name: Print variables
         run: |
           echo "AWS Access Key: $AWS_ACCESS_KEY_ID ${{ secrets.AWS_ACCESS_KEY_ID }}"
