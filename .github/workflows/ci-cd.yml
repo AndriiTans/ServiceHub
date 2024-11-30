@@ -69,8 +69,8 @@ jobs:
           zip -r shop-service.zip .
           mv shop-service.zip ../../../infrastructure/lambda/shop-service.zip
 
-      # Verify ZIP files and check their sizes
-      - name: Verify and Check Sizes of ZIP Files
+      # Verify ZIP files and check their contents
+      - name: Verify and Inspect ZIP Files
         run: |
           if [[ ! -f "infrastructure/lambda/auth-service.zip" ]]; then
             echo "Error: auth-service.zip does not exist!" && exit 1
@@ -78,11 +78,22 @@ jobs:
           if [[ ! -f "infrastructure/lambda/shop-service.zip" ]]; then
             echo "Error: shop-service.zip does not exist!" && exit 1
           fi
+
           echo "Both ZIP files exist. Checking sizes..."
+
           echo "Size of auth-service.zip:"
           du -h infrastructure/lambda/auth-service.zip
           echo "Size of shop-service.zip:"
           du -h infrastructure/lambda/shop-service.zip
+
+          echo "Both ZIP files exist. Checking contents..."
+
+          echo "Contents of auth-service.zip:"
+          unzip -l infrastructure/lambda/auth-service.zip
+
+          echo "Contents of shop-service.zip:"
+          unzip -l infrastructure/lambda/shop-service.zip
+
 
       # Set up Terraform
       - name: Set up Terraform
