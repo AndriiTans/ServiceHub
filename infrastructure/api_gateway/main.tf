@@ -27,7 +27,7 @@ resource "aws_api_gateway_integration" "auth_integration" {
   http_method             = aws_api_gateway_method.auth_method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.auth_lambda_arn
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${module.lambda_auth.lambda_arn}/invocations"
 }
 
 resource "aws_api_gateway_method" "shop_method" {
@@ -43,7 +43,7 @@ resource "aws_api_gateway_integration" "shop_integration" {
   http_method             = aws_api_gateway_method.shop_method.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = var.shop_lambda_arn
+  uri                     = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${module.lambda_shop.lambda_arn}/invocations"
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
