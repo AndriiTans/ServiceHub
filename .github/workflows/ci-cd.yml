@@ -59,7 +59,7 @@ jobs:
           npm run build
           cd dist
           zip -r auth-service.zip .
-          mv auth-service.zip ../../../infrastructure/lambda/auth-service.zip
+          mv auth-service.zip ../../../infrastructure/lambda/dist-package-auth.zip
           cd ../../
 
           # Shop Service
@@ -67,32 +67,32 @@ jobs:
           npm run build
           cd dist
           zip -r shop-service.zip .
-          mv shop-service.zip ../../../infrastructure/lambda/shop-service.zip
+          mv shop-service.zip ../../../infrastructure/lambda/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
       - name: Verify and Inspect ZIP Files
         run: |
-          if [[ ! -f "infrastructure/lambda/auth-service.zip" ]]; then
-            echo "Error: auth-service.zip does not exist!" && exit 1
+          if [[ ! -f "infrastructure/lambda/dist-package-auth.zip" ]]; then
+            echo "Error: dist-package-auth does not exist!" && exit 1
           fi
-          if [[ ! -f "infrastructure/lambda/shop-service.zip" ]]; then
-            echo "Error: shop-service.zip does not exist!" && exit 1
+          if [[ ! -f "infrastructure/lambda/dist-package-shop.zip" ]]; then
+            echo "Error: dist-package-shop.zip does not exist!" && exit 1
           fi
 
           echo "Both ZIP files exist. Checking sizes..."
 
-          echo "Size of auth-service.zip:"
-          du -h infrastructure/lambda/auth-service.zip
-          echo "Size of shop-service.zip:"
-          du -h infrastructure/lambda/shop-service.zip
+          echo "Size of dist-package-auth.zip:"
+          du -h infrastructure/lambda/dist-package-auth.zip
+          echo "Size of dist-package-shop.zip:"
+          du -h infrastructure/lambda/dist-package-shop.zip
 
           echo "Both ZIP files exist. Checking contents..."
 
-          echo "Contents of auth-service.zip:"
-          unzip -l infrastructure/lambda/auth-service.zip
+          echo "Contents of dist-package-auth.zip:"
+          unzip -l infrastructure/lambda/dist-package-auth.zip
 
-          echo "Contents of shop-service.zip:"
-          unzip -l infrastructure/lambda/shop-service.zip
+          echo "Contents of dist-package-shop.zip:"
+          unzip -l infrastructure/lambda/dist-package-shop.zip
 
 
       # Set up Terraform

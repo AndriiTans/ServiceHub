@@ -50,16 +50,28 @@ resource "aws_iam_role_policy_attachment" "lambda_logging" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Explicitly create CloudWatch log groups for each Lambda function
 resource "aws_cloudwatch_log_group" "auth_log_group" {
   name              = "/aws/lambda/auth-service"
   retention_in_days = var.log_retention_days
+
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+    ignore_changes        = [retention_in_days]
+  }
 }
 
 resource "aws_cloudwatch_log_group" "shop_log_group" {
   name              = "/aws/lambda/shop-service"
   retention_in_days = var.log_retention_days
+
+  lifecycle {
+    create_before_destroy = true
+    prevent_destroy       = true
+    ignore_changes        = [retention_in_days]
+  }
 }
+
 
 # Outputs for the ARNs of both Lambda functions
 output "auth_lambda_arn" {
