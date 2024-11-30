@@ -126,6 +126,11 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
 
+      - name: Cleanup Existing Lambda Functions
+        run: |
+          aws lambda delete-function --function-name auth-service || true
+          aws lambda delete-function --function-name shop-service || true
+
       # Validate Terraform configuration
       - name: Terraform Validate
         working-directory: ${{ env.TF_WORKING_DIR }}
