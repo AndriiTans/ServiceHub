@@ -26,7 +26,7 @@ resource "aws_lambda_function" "auth_service" {
   handler       = "dist/index.handler" # This points to the index.js file
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = "${path.module}/dist-package.zip" # Ensure this ZIP contains `dist/index.js`
+  filename      = "${path.module}/dist-package-auth.zip" # Ensure this ZIP contains `dist/index.js`
   environment {
     variables = var.environment
   }
@@ -38,36 +38,34 @@ resource "aws_lambda_function" "shop_service" {
   handler       = "dist/main.handler" # This points to the main.js file
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = "${path.module}/dist-package.zip" # Ensure this ZIP contains `dist/main.js`
+  filename      = "${path.module}/dist-package-shop.zip" # Ensure this ZIP contains `dist/main.js`
   environment {
     variables = var.environment
   }
 }
 
-
-# resource "aws_lambda_function" "this" {
-#  function_name = var.function_name
-#  handler       = "dist/index.handler" # Update handler path
-#  runtime       = var.runtime
-#  role          = aws_iam_role.lambda_execution_role.arn
-#  filename      = "${path.module}/dist-package.zip" # Ensure your ZIP contains `dist/index.js` and `node_modules`
-#  environment {
-#    variables = var.environment
-#  }
-#}
-
-
+# Attach logging policy to the IAM role
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Optional: Explicitly create a CloudWatch log group
-resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  name              = "/aws/lambda/${var.function_name}"
+# Explicitly create CloudWatch log groups for each Lambda function
+resource "aws_cloudwatch_log_group" "auth_log_group" {
+  name              = "/aws/lambda/auth-service"
   retention_in_days = var.log_retention_days
 }
 
-output "lambda_arn" {
-  value = aws_lambda_function.this.arn
+resource "aws_cloudwatch_log_group" "shop_log_group" {
+  name              = "/aws/lambda/shop-service"
+  retention_in_days = var.log_retention_days
+}
+
+# Outputs for the ARNs of both Lambda functions
+output "auth_lambda_arn" {
+  value = aws_lambda_function.auth_service.arn
+}
+
+output "shop_lambda_arn" {
+  value = aws_lambda_function.shop_service.arn
 }
