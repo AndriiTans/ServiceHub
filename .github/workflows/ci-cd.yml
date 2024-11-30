@@ -1,0 +1,35 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - deployment
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [auth-service, shop-service, web-service]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t my-docker-hub/${{ matrix.service }} ./services/${{ matrix.service }}
+          docker push my-docker-hub/${{ matrix.service }}
+
+      - name: Deploy to AWS Lambda
+        run: |
+          terraform init
+          terraform apply -auto-approve -var "service=${{ matrix.service }}"
+        working-directory: ./infrastructure/
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

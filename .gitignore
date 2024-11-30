@@ -76,7 +76,7 @@ init.sql
 *.db
 
 # Ignore GitHub configuration files
-.github/
+# .github/
 
 # Ignore specific service files
 **/node_modules/
