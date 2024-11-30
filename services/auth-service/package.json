@@ -5,8 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node --transpile-only ./src/index.ts",
-    "build": "tsc",
-    "build1": "esbuild src/index.ts --bundle --platform=node --target=node18 --outdir=dist"
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --outdir=dist"
   },
   "keywords": [],
   "author": "",
