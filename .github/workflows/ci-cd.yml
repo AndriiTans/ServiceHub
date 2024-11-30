@@ -106,6 +106,15 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
+      - name: Cleanup Existing Resources
+        run: |
+          aws lambda delete-function --function-name auth-service || true
+          aws lambda delete-function --function-name shop-service || true
+          aws iam delete-role --role-name auth-service_execution_role || true
+          aws iam delete-role --role-name shop-service_execution_role || true
+          aws logs delete-log-group --log-group-name "/aws/lambda/auth-service" || true
+          aws logs delete-log-group --log-group-name "/aws/lambda/shop-service" || true
+
       - name: Cleanup Old IAM Roles
         run: |
           echo "Cleaning up old IAM roles..."
