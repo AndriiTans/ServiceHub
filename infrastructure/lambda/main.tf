@@ -4,7 +4,7 @@ resource "random_string" "suffix" {
 }
 
 resource "aws_iam_role" "lambda_execution_role" {
-  name = "${var.function_name}_execution_role_${random_string.suffix.id}"
+  name = "${var.function_name}_execution_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
