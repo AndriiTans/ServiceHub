@@ -3,34 +3,27 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main         # Deploy when changes are pushed to the main branch (Production)
-      - deployment   # Deploy when changes are pushed to the deployment branch (Development)
+      - main
+      - deployment
 
 jobs:
   deploy:
     name: Deploy Services and Infrastructure
     runs-on: ubuntu-latest
 
-    # Environment Variables
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: us-east-1  # Replace with your region if necessary.
+      AWS_DEFAULT_REGION: us-east-1
       TF_WORKING_DIR: infrastructure
 
     steps:
       - name: Print all environment variables
         run: printenv
-      - name: Print variables
-        run: |
-          echo "AWS Access Key: $AWS_ACCESS_KEY_ID ${{ secrets.AWS_ACCESS_KEY_ID }}"
-          echo "AWS Region: $AWS_DEFAULT_REGION"
-          
-      # Checkout the repository
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Determine Environment Based on Branch
       - name: Set Environment
         id: env
         run: |
@@ -42,20 +35,17 @@ jobs:
             echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
           fi
 
-      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      # Install dependencies for services
       - name: Install Dependencies for Services
         working-directory: services
         run: |
           cd auth-service && npm install && npm run build
           cd ../shop-service && npm install && npm run build
 
-      # Zip Lambda functions for deployment
       - name: Package Lambda Functions
         working-directory: services
         run: |
@@ -68,33 +58,37 @@ jobs:
           zip -r shop-service.zip index.js node_modules package.json
           mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
 
-      # Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Initialize Terraform
-      - name: Terraform Init
+      - name: Clean Up Terraform State
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init
+        run: |
+          terraform state rm aws_iam_role.auth-service_execution_role || true
+          terraform state rm aws_iam_role.shop-service_execution_role || true
 
-      # Destroy Existing Infrastructure
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
 
-      # Plan Terraform changes
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -var-file=env/${{ env.tfvars_file }}
 
-      # Apply Terraform changes
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
 
-      # Verify Deployment
       - name: Verify Deployment
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
