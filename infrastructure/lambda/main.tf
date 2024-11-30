@@ -20,17 +20,42 @@ resource "aws_iam_role" "lambda_execution_role" {
   }
 }
 
-resource "aws_lambda_function" "this" {
-  function_name = var.function_name
-  handler       = var.handler
+# Lambda for Auth Service
+resource "aws_lambda_function" "auth_service" {
+  function_name = "auth-service"
+  handler       = "dist/index.handler" # This points to the index.js file
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = "${path.module}/${var.filename}" # Ensure correct relative path
-  
+  filename      = "${path.module}/dist-package.zip" # Ensure this ZIP contains `dist/index.js`
   environment {
     variables = var.environment
   }
 }
+
+# Lambda for Shop Service
+resource "aws_lambda_function" "shop_service" {
+  function_name = "shop-service"
+  handler       = "dist/main.handler" # This points to the main.js file
+  runtime       = var.runtime
+  role          = aws_iam_role.lambda_execution_role.arn
+  filename      = "${path.module}/dist-package.zip" # Ensure this ZIP contains `dist/main.js`
+  environment {
+    variables = var.environment
+  }
+}
+
+
+# resource "aws_lambda_function" "this" {
+#  function_name = var.function_name
+#  handler       = "dist/index.handler" # Update handler path
+#  runtime       = var.runtime
+#  role          = aws_iam_role.lambda_execution_role.arn
+#  filename      = "${path.module}/dist-package.zip" # Ensure your ZIP contains `dist/index.js` and `node_modules`
+#  environment {
+#    variables = var.environment
+#  }
+#}
+
 
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_execution_role.name

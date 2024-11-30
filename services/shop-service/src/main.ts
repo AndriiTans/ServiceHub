@@ -2,14 +2,15 @@ import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { seed } from './seed';
 import { AppDataSource } from './config/data-source';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { AuthGuard } from './common/guards/auth.guard';
+import serverlessExpress from '@vendia/serverless-express';
 
-async function bootstrap() {
+let server: any; // Holds the serverlessExpress instance for reuse
+
+async function createApp() {
   const app = await NestFactory.create(AppModule);
 
   app.setGlobalPrefix('v1', {
@@ -23,9 +24,6 @@ async function bootstrap() {
   );
 
   app.useLogger(['log', 'error', 'warn', 'debug', 'verbose']);
-
-  console.log(process.env.TYPEORM_SYNC);
-  console.log(process.env.TYPEORM_LOGGING);
 
   app.useGlobalInterceptors(new LoggingInterceptor());
 
@@ -52,10 +50,30 @@ async function bootstrap() {
   //   Logger.log('Data already exists, skipping seed.');
   // }
 
-  const port = process.env.PORT;
+  return app;
+}
+
+// Local development bootstrap
+async function bootstrap() {
+  const app = await createApp();
+
+  const port = process.env.PORT || 3000;
   await app.listen(port);
 
   Logger.log(`🚀 shop-service is running and listening on port - ${port}`);
 }
 
-bootstrap();
+// Lambda handler
+export const handler = async (event: any, context: any) => {
+  if (!server) {
+    const app = await createApp();
+    await app.init(); // Ensures NestJS lifecycle hooks are triggered
+    server = serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+  }
+  return server(event, context);
+};
+
+// Run locally if not in a Lambda environment
+if (process.env.NODE_ENV !== 'production') {
+  bootstrap();
+}
