@@ -66,17 +66,17 @@ jobs:
         with:
           terraform_version: 1.5.6
 
+      # Initialize Terraform (for destroy)
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
       # Clean up existing roles from Terraform state if necessary
       - name: Clean Up Terraform State
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform state rm aws_iam_role.auth-service_execution_role || true
           terraform state rm aws_iam_role.shop-service_execution_role || true
-
-      # Initialize Terraform (for destroy)
-      - name: Terraform Init (Destroy)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init
 
       # Run Terraform Destroy (optional, to ensure a clean slate)
       - name: Terraform Destroy
