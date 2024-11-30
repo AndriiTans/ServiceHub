@@ -1,11 +1,11 @@
-variable "rest_api_name" {
-  description = "Name of the API Gateway"
+variable "lambda_auth_arn" {
+  description = "ARN of the Auth Lambda function"
 }
 
-variable "auth_lambda_arn" {
-  description = "ARN of the auth Lambda function"
+variable "lambda_shop_arn" {
+  description = "ARN of the Shop Lambda function"
 }
 
-variable "shop_lambda_arn" {
-  description = "ARN of the shop Lambda function"
+variable "aws_region" {
+  description = "AWS Region where the API Gateway is deployed"
 }
