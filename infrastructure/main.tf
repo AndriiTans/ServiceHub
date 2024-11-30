@@ -1,42 +1,35 @@
 provider "aws" {
-  region = var.aws_region
+  region = var.region
 }
 
-# Call Lambda module for each service
-module "auth_service" {
-  source       = "./modules/lambda"
-  service_name = "auth-service"
-  env          = var.env
-  memory_size  = 128
-  timeout      = 15
-}
-
-module "shop_service" {
-  source       = "./modules/lambda"
-  service_name = "shop-service"
-  env          = var.env
-  memory_size  = 128
-  timeout      = 15
-}
-
-module "web_service" {
-  source       = "./modules/lambda"
-  service_name = "web-service"
-  env          = var.env
-  memory_size  = 256
-  timeout      = 30
-}
-
-# VPC Module (optional for Lambda if needed)
-module "vpc" {
-  source = "./modules/vpc"
-}
-
-# Output service endpoints
-output "lambda_endpoints" {
-  value = {
-    auth_service = module.auth_service.api_gateway_url
-    shop_service = module.shop_service.api_gateway_url
-    web_service  = module.web_service.api_gateway_url
+module "lambda_auth" {
+  source = "./lambda"
+  function_name = "auth-service"
+  handler = "index.handler"
+  runtime = "nodejs18.x"
+  environment = {
+    NODE_ENV = "production"
+    AUTH_DB_URL = var.auth_db_url
+    JWT_SECRET_KEY = var.jwt_secret_key
   }
+  filename = "../services/auth-service/index.js"
+}
+
+module "lambda_shop" {
+  source = "./lambda"
+  function_name = "shop-service"
+  handler = "index.handler"
+  runtime = "nodejs18.x"
+  environment = {
+    NODE_ENV = "production"
+    SHOP_DB_URL = var.shop_db_url
+  }
+  filename = "../services/shop-service/index.js"
+}
+
+module "api_gateway" {
+  source = "./api_gateway"
+  rest_api_name = "MyAPIGateway"
+  auth_lambda_arn = module.lambda_auth.lambda_arn
+  shop_lambda_arn = module.lambda_shop.lambda_arn
 }

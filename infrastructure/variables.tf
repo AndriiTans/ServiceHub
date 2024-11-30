@@ -1,21 +1,16 @@
-variable "aws_region" {
-  description = "AWS Region"
-  type        = string
+variable "region" {
+  description = "AWS region"
+  default     = "us-east-1"
 }
 
-variable "env" {
-  description = "Environment (dev, prod)"
-  type        = string
+variable "auth_db_url" {
+  description = "Database URL for auth service"
 }
 
-variable "memory_size" {
-  description = "Memory size for Lambda functions"
-  type        = number
-  default     = 128
+variable "shop_db_url" {
+  description = "Database URL for shop service"
 }
 
-variable "timeout" {
-  description = "Timeout for Lambda functions in seconds"
-  type        = number
-  default     = 15
+variable "jwt_secret_key" {
+  description = "JWT secret key for authentication"
 }
