@@ -48,9 +48,15 @@ resource "aws_api_gateway_integration" "shop_integration" {
 
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.main.id
-  stage_name  = "prod"
+  depends_on  = [aws_api_gateway_integration.auth_integration, aws_api_gateway_integration.shop_integration]
+}
+
+resource "aws_api_gateway_stage" "prod_stage" {
+  deployment_id = aws_api_gateway_deployment.deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  stage_name    = "prod"
 }
 
 output "api_url" {
-  value = aws_api_gateway_deployment.deployment.invoke_url
+  value = aws_api_gateway_stage.prod_stage.invoke_url
 }
