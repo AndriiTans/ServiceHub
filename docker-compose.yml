@@ -145,6 +145,23 @@ services:
       retries: 5
 
   # MongoDB Database Service
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "${MONGO_PORT}:${MONGO_PORT}"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_SOCIAL_NETWORK_DB} # Optional, creates a default database
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   # Gateway Service
   gateway:
     image: nginx:alpine
@@ -164,11 +181,6 @@ services:
       - web-service
     networks:
       - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 volumes:
   mysql_data:
