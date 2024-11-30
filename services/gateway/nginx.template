@@ -1,0 +1,33 @@
+worker_processes 1;
+
+events { worker_connections 1024; }
+
+http {
+  server {
+    listen 3011;
+
+    # Route API requests to Auth Service
+    location /api/auth/ {
+      proxy_pass http://auth-service:${AUTH_SERVICE_PORT}/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Route API requests to Shop Service
+    location /api/shop/ {
+      proxy_pass http://shop-service:${SHOP_SERVICE_PORT}/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # Serve the Next.js Web App
+    location /web/ {
+      proxy_pass http://web-service:${WEB_SERVICE_PORT}/;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+  }
+}

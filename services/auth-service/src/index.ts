@@ -15,11 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(logger);
 
-app.use('/api', apiRoutes);
-
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello, TypeScript with Express!');
-});
+app.use('/', apiRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
