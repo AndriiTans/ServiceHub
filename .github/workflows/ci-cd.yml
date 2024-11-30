@@ -3,8 +3,8 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main
-      - deployment
+      - main         # Deploy when changes are pushed to the main branch (Production)
+      - deployment   # Deploy when changes are pushed to the deployment branch (Development)
 
 jobs:
   deploy:
@@ -18,12 +18,15 @@ jobs:
       TF_WORKING_DIR: infrastructure
 
     steps:
+      # Print Environment Variables (Debugging)
       - name: Print all environment variables
         run: printenv
 
+      # Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Set Environment Variables Based on Branch
       - name: Set Environment
         id: env
         run: |
@@ -35,18 +38,20 @@ jobs:
             echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
           fi
 
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
+      # Install Dependencies for Services
       - name: Install Dependencies for Services
         working-directory: services
         run: |
           cd auth-service && npm install && npm run build
           cd ../shop-service && npm install && npm run build
 
-      # Zip Lambda functions for deployment
+      # Package Lambda Functions for Deployment
       - name: Package Lambda Functions
         working-directory: services
         run: |
@@ -61,40 +66,45 @@ jobs:
           zip -r shop-service.zip index.js node_modules package.json
           mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
 
+      # Set up Terraform
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.6
 
-      # Initialize Terraform (for destroy)
+      # Initialize Terraform
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      # Clean up existing roles from Terraform state if necessary
+      # Clean Up Existing State (Optional for Fresh Deployments)
       - name: Clean Up Terraform State
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform state rm aws_iam_role.auth-service_execution_role || true
           terraform state rm aws_iam_role.shop-service_execution_role || true
 
-      # Run Terraform Destroy (optional, to ensure a clean slate)
+      # Conditional Terraform Destroy for Non-Production
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
 
+      # Validate Terraform Configuration
       - name: Terraform Validate
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
+      # Terraform Plan
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -var-file=env/${{ env.tfvars_file }}
 
+      # Terraform Apply
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
 
+      # Verify Deployment
       - name: Verify Deployment
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |

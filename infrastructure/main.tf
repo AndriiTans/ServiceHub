@@ -3,33 +3,33 @@ provider "aws" {
 }
 
 module "lambda_auth" {
-  source = "./lambda"
+  source        = "./lambda"
   function_name = "auth-service"
-  handler = "index.handler"
-  runtime = "nodejs18.x"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
   environment = {
-    NODE_ENV = "production"
-    AUTH_DB_URL = var.auth_db_url
+    NODE_ENV      = "production"
+    AUTH_DB_URL   = var.auth_db_url
     JWT_SECRET_KEY = var.jwt_secret_key
   }
   filename = "../infrastructure/lambda/auth-service.zip"
 }
 
 module "lambda_shop" {
-  source = "./lambda"
+  source        = "./lambda"
   function_name = "shop-service"
-  handler = "index.handler"
-  runtime = "nodejs18.x"
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
   environment = {
-    NODE_ENV = "production"
+    NODE_ENV    = "production"
     SHOP_DB_URL = var.shop_db_url
   }
   filename = "../infrastructure/lambda/shop-service.zip"
 }
 
 module "api_gateway" {
-  source = "./api_gateway"
-  rest_api_name = "MyAPIGateway"
-  auth_lambda_arn = module.lambda_auth.lambda_arn
-  shop_lambda_arn = module.lambda_shop.lambda_arn
+  source          = "./api_gateway"
+  lambda_auth_arn = module.lambda_auth.lambda_arn
+  lambda_shop_arn = module.lambda_shop.lambda_arn
+  aws_region      = var.region # Use `region` for consistency with the provider
 }

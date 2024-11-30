@@ -1,11 +1,11 @@
 variable "lambda_auth_arn" {
-  description = "ARN of the Auth Lambda function"
+  description = "ARN of the Lambda function for auth"
 }
 
 variable "lambda_shop_arn" {
-  description = "ARN of the Shop Lambda function"
+  description = "ARN of the Lambda function for shop"
 }
 
 variable "aws_region" {
-  description = "AWS Region where the API Gateway is deployed"
+  description = "AWS region"
 }
