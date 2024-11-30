@@ -1,35 +1,74 @@
-name: CI/CD Pipeline
+name: Deploy to AWS
 
 on:
   push:
     branches:
-      - deployment
+      - main  # Deploy only when changes are pushed to the main branch
 
 jobs:
   deploy:
+    name: Deploy Services and Infrastructure
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        service: [auth-service, shop-service, web-service]
+    env:
+      TF_WORKING_DIR: infrastructure
+      AWS_REGION: us-east-1  # Update based on your region
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-      - name: Build and Push Docker Image
+      # Install dependencies for services
+      - name: Install Dependencies for Services
+        working-directory: services
         run: |
-          docker build -t my-docker-hub/${{ matrix.service }} ./services/${{ matrix.service }}
-          docker push my-docker-hub/${{ matrix.service }}
+          cd auth-service && npm install && npm run build
+          cd ../shop-service && npm install && npm run build
 
-      - name: Deploy to AWS Lambda
+      # Zip Lambda functions for deployment
+      - name: Package Lambda Functions
+        working-directory: services
         run: |
-          terraform init
-          terraform apply -auto-approve -var "service=${{ matrix.service }}"
-        working-directory: ./infrastructure/
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cd auth-service && zip -r auth-service.zip .
+          mv auth-service.zip ../../infrastructure/lambda/auth-service.zip
+          cd ../shop-service && zip -r shop-service.zip .
+          mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
+
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
+
+      # Initialize Terraform
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      # Plan Terraform changes
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -var-file=env/dev.tfvars
+
+      # Apply Terraform changes
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve -var-file=env/dev.tfvars
+
+      # Verify Deployment
+      - name: Verify Deployment
+        run: |
+          echo "API Gateway URL:"
+          terraform output -raw api_gateway_url
+
+    # Environment Variables
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
