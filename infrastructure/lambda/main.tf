@@ -25,6 +25,7 @@ resource "aws_iam_role" "lambda_execution_role" {
 # Lambda for Auth Service
 resource "aws_lambda_function" "auth_service" {
   function_name = "auth-service"
+  timeout       = 10
   handler       = "dist/index.handler" # This points to the index.js file
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
@@ -34,17 +35,18 @@ resource "aws_lambda_function" "auth_service" {
   }
 }
 
-# Lambda for Shop Service
 resource "aws_lambda_function" "shop_service" {
   function_name = "shop-service"
-  handler       = "dist/main.handler" # This points to the main.js file
+  timeout       = 10
+  handler       = "src/main.handler" # Update the handler path to include "src/"
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = "${path.module}/dist-package-shop.zip" # Ensure this ZIP contains `dist/main.js`
+  filename      = "${path.module}/dist-package-shop.zip" # Ensure this ZIP contains `dist/src/main.js`
   environment {
     variables = var.environment
   }
 }
+
 
 # Attach logging policy to the IAM role
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
