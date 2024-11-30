@@ -101,20 +101,21 @@ services:
   #     - app-network
   #   command: ["npm", "start"]
 
-  # Frontend
-  # frontend:
-  #   build:
-  #     context: ./services/frontend-app
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "3000:80"
-  #   networks:
-  #     - app-network
-  #   depends_on:
-  #     shop-service:
-  #       condition: service_healthy
-  #   environment:
-  #     - REACT_APP_API_URL=http://shop-service:3003
+  # Web service
+  web-service:
+    build:
+      context: ./services/web-service
+      dockerfile: Dockerfile
+    ports:
+      - "${WEB_SERVICE_PORT}:${WEB_SERVICE_PORT}"
+    networks:
+      - app-network
+    depends_on:
+      shop-service:
+        condition: service_healthy
+    environment:
+      - AUTH_API_URL=http://auth-service:3001
+      - SHOP_API_URL=http://shop-service:3003
 
   # Social Network Service
   social-network-service:
