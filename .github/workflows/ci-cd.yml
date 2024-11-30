@@ -3,7 +3,8 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - deployment  # Deploy only when changes are pushed to the main branch
+      - main  # Deploy only when changes are pushed to the deployment branch
+      - deployment  # Deploy only when changes are pushed to the deployment branch
 
 jobs:
   deploy:
@@ -68,7 +69,8 @@ jobs:
           echo "API Gateway URL:"
           terraform output -raw api_gateway_url
 
-    # Environment Variables
+    # Environment Variables (Correct placement)
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1  # Replace with your region if necessary
