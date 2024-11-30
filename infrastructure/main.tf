@@ -31,5 +31,6 @@ module "api_gateway" {
   source          = "./api_gateway"
   lambda_auth_arn = module.lambda_auth.lambda_arn
   lambda_shop_arn = module.lambda_shop.lambda_arn
-  aws_region      = var.region # Use `region` for consistency with the provider
+  aws_region      = var.region
+  rest_api_name   = "MyServiceAPI" # Customize the name for your API Gateway
 }
