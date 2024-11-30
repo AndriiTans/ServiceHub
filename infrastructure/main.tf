@@ -12,7 +12,7 @@ module "lambda_auth" {
     AUTH_DB_URL   = var.auth_db_url
     JWT_SECRET_KEY = var.jwt_secret_key
   }
-  filename = "../infrastructure/lambda/auth-service.zip"
+  filename = "lambda/auth-service.zip"
 }
 
 module "lambda_shop" {
@@ -24,7 +24,7 @@ module "lambda_shop" {
     NODE_ENV    = "production"
     SHOP_DB_URL = var.shop_db_url
   }
-  filename = "../infrastructure/lambda/shop-service.zip"
+  filename = "lambda/shop-service.zip"
 }
 
 module "api_gateway" {
