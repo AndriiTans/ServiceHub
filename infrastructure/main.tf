@@ -1,36 +1,26 @@
-provider "aws" {
-  region = var.region
-}
-
 module "lambda_auth" {
-  source        = "./lambda"
+  source = "./lambda"
   function_name = "auth-service"
-  handler       = "index.handler"
+  handler       = "dist/index.handler"
   runtime       = "nodejs18.x"
-  environment = {
-    NODE_ENV      = "production"
-    AUTH_DB_URL   = var.auth_db_url
-    JWT_SECRET_KEY = var.jwt_secret_key
+  environment   = {
+    NODE_ENV = "production"
   }
-  filename = "auth-service.zip"
 }
 
 module "lambda_shop" {
-  source        = "./lambda"
+  source = "./lambda"
   function_name = "shop-service"
-  handler       = "index.handler"
+  handler       = "dist/main.handler"
   runtime       = "nodejs18.x"
-  environment = {
-    NODE_ENV    = "production"
-    SHOP_DB_URL = var.shop_db_url
+  environment   = {
+    NODE_ENV = "production"
   }
-  filename = "shop-service.zip"
 }
 
 module "api_gateway" {
   source          = "./api_gateway"
-  lambda_auth_arn = module.lambda_auth.lambda_arn
-  lambda_shop_arn = module.lambda_shop.lambda_arn
+  lambda_auth_arn = module.lambda_auth.lambda_arn       # Correct reference
+  lambda_shop_arn = module.lambda_shop.lambda_arn_shop # Correct reference
   aws_region      = var.region
-  rest_api_name   = "MyServiceAPI" # Customize the name for your API Gateway
 }
