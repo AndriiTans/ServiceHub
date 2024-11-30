@@ -11,9 +11,12 @@ jobs:
     name: Deploy Services and Infrastructure
     runs-on: ubuntu-latest
 
+    # Environment Variables
     env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1  # Replace with your region if necessary
       TF_WORKING_DIR: infrastructure
-      AWS_REGION: us-east-1  # Update based on your region
 
     steps:
       # Checkout the repository
@@ -77,12 +80,7 @@ jobs:
 
       # Verify Deployment
       - name: Verify Deployment
+        working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           echo "API Gateway URL:"
           terraform output -raw api_gateway_url
-
-    # Environment Variables (Correct placement)
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_DEFAULT_REGION: us-east-1  # Replace with your region if necessary
