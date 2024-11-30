@@ -47,9 +47,9 @@ jobs:
       - name: Install Dependencies for Services
         working-directory: services
         run: |
-          # Install production dependencies for all services
-          cd auth-service && npm install --production
-          cd ../shop-service && npm install --production
+          # Install production and development dependencies for all services
+          cd auth-service && npm install
+          cd ../shop-service && npm install
 
       - name: Minify and Package Lambda Functions
         working-directory: services
@@ -57,14 +57,16 @@ jobs:
           # Auth Service
           cd auth-service
           npm run build
-          zip -r auth-service.zip dist node_modules package.json
+          cd dist
+          zip -r auth-service.zip .
           mv auth-service.zip ../../../infrastructure/lambda/dist-package-auth.zip
-          cd ..
+          cd ../../
 
           # Shop Service
           cd shop-service
           npm run build
-          zip -r shop-service.zip dist node_modules package.json
+          cd dist
+          zip -r shop-service.zip .
           mv shop-service.zip ../../../infrastructure/lambda/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
