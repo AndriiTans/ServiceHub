@@ -6,7 +6,7 @@ import { connectDatabase } from './config/database';
 import apiRoutes from './routes';
 import logger from './utils/logger';
 
-// dotenv.config(); // Load env
+// dotenv.config(); // Load env.
 
 const app = express();
 
