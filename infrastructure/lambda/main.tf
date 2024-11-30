@@ -25,7 +25,7 @@ resource "aws_lambda_function" "this" {
   handler       = var.handler
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = var.filename
+  filename      = "${path.module}/${var.filename}" # Ensure correct relative path
   environment {
     variables = var.environment
   }
