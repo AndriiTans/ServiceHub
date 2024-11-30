@@ -46,14 +46,17 @@ jobs:
           cd auth-service && npm install && npm run build
           cd ../shop-service && npm install && npm run build
 
+      # Zip Lambda functions for deployment
       - name: Package Lambda Functions
         working-directory: services
         run: |
+          # Auth Service
           cd auth-service
           npm install --only=production
           zip -r auth-service.zip index.js node_modules package.json
           mv auth-service.zip ../../infrastructure/lambda/auth-service.zip
           cd ../shop-service
+          # Shop Service
           npm install --only=production
           zip -r shop-service.zip index.js node_modules package.json
           mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
