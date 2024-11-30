@@ -3,8 +3,8 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main  # Deploy only when changes are pushed to the deployment branch
-      - deployment  # Deploy only when changes are pushed to the deployment branch
+      - main         # Deploy when changes are pushed to the main branch (Production)
+      - deployment   # Deploy when changes are pushed to the deployment branch (Development)
 
 jobs:
   deploy:
@@ -19,6 +19,18 @@ jobs:
       # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      # Determine Environment Based on Branch
+      - name: Set Environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "env_name=prod" >> $GITHUB_ENV
+            echo "tfvars_file=prod.tfvars" >> $GITHUB_ENV
+          else
+            echo "env_name=dev" >> $GITHUB_ENV
+            echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
+          fi
 
       # Set up Node.js environment
       - name: Set up Node.js
@@ -56,12 +68,12 @@ jobs:
       # Plan Terraform changes
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -var-file=env/dev.tfvars
+        run: terraform plan -var-file=env/${{ env.tfvars_file }}
 
       # Apply Terraform changes
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -auto-approve -var-file=env/dev.tfvars
+        run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
 
       # Verify Deployment
       - name: Verify Deployment
