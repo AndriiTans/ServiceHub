@@ -26,6 +26,7 @@ resource "aws_lambda_function" "this" {
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
   filename      = "${path.module}/${var.filename}" # Ensure correct relative path
+  
   environment {
     variables = var.environment
   }
@@ -34,6 +35,12 @@ resource "aws_lambda_function" "this" {
 resource "aws_iam_role_policy_attachment" "lambda_logging" {
   role       = aws_iam_role.lambda_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Optional: Explicitly create a CloudWatch log group
+resource "aws_cloudwatch_log_group" "lambda_log_group" {
+  name              = "/aws/lambda/${var.function_name}"
+  retention_in_days = var.log_retention_days
 }
 
 output "lambda_arn" {

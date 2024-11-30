@@ -3,13 +3,18 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - master
+      - main
       - deployment
+    paths:
+      - "services/auth-service/**"
+      - "services/shop-service/**"
+      - "infrastructure/**"
 
 jobs:
-  deploy:
-    name: Deploy Services and Infrastructure
+  deploy-auth-service:
+    name: Deploy Auth Service
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'auth-service') || github.event.paths[0] == 'services/auth-service/**'
 
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -18,137 +23,74 @@ jobs:
       TF_WORKING_DIR: infrastructure
 
     steps:
-      # Print environment variables for debugging
-      - name: Print all environment variables
-        run: printenv
-
-      # Checkout the repository
+      # Checkout code
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Set environment based on branch
+      # Set environment variables
       - name: Set Environment
-        id: env
-        run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "env_name=prod" >> $GITHUB_ENV
-            echo "tfvars_file=prod.tfvars" >> $GITHUB_ENV
-          else
-            echo "env_name=dev" >> $GITHUB_ENV
-            echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
-          fi
+        run: echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
 
-      # Set up Node.js
+      # Set up Node.js and build auth-service
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies for Services
-        working-directory: services
+      - name: Install and Build Auth Service
+        working-directory: services/auth-service
         run: |
-          # Install production and development dependencies for all services
-          cd auth-service && npm install
-          cd ../shop-service && npm install
-
-      - name: Minify and Package Lambda Functions
-        working-directory: services
-        run: |
-          # Auth Service
-          cd auth-service
+          npm install
           npm run build
           cd dist
           zip -r auth-service.zip .
           mv auth-service.zip ../../../infrastructure/lambda/auth-service.zip
-          cd ../../
 
-          # Shop Service
-          cd shop-service
+      # Deploy with Terraform
+      - name: Deploy Auth Service Infrastructure
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform init
+          terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
+
+  deploy-shop-service:
+    name: Deploy Shop Service
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'shop-service') || github.event.paths[0] == 'services/shop-service/**'
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      TF_WORKING_DIR: infrastructure
+
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Set environment variables
+      - name: Set Environment
+        run: echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
+
+      # Set up Node.js and build shop-service
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install and Build Shop Service
+        working-directory: services/shop-service
+        run: |
+          npm install
           npm run build
           cd dist
           zip -r shop-service.zip .
           mv shop-service.zip ../../../infrastructure/lambda/shop-service.zip
 
-      # Verify ZIP files and check their contents
-      - name: Verify and Inspect ZIP Files
-        run: |
-          if [[ ! -f "infrastructure/lambda/auth-service.zip" ]]; then
-            echo "Error: auth-service.zip does not exist!" && exit 1
-          fi
-          if [[ ! -f "infrastructure/lambda/shop-service.zip" ]]; then
-            echo "Error: shop-service.zip does not exist!" && exit 1
-          fi
-
-          echo "Both ZIP files exist. Checking sizes..."
-
-          echo "Size of auth-service.zip:"
-          du -h infrastructure/lambda/auth-service.zip
-          echo "Size of shop-service.zip:"
-          du -h infrastructure/lambda/shop-service.zip
-
-          echo "Both ZIP files exist. Checking contents..."
-
-          echo "Contents of auth-service.zip:"
-          unzip -l infrastructure/lambda/auth-service.zip
-
-          echo "Contents of shop-service.zip:"
-          unzip -l infrastructure/lambda/shop-service.zip
-
-
-      # Set up Terraform
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.6
-
-      # Initialize Terraform
-      - name: Terraform Init
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init
-
-      - name: Cleanup Old IAM Roles
-        run: |
-          echo "Cleaning up old IAM roles..."
-          aws iam list-roles --query "Roles[?contains(RoleName, 'execution_role')].RoleName" --output text | while read -r role; do
-            echo "Deleting role: $role"
-            aws iam delete-role --role-name "$role" || true
-          done
-
-      # Clean up existing roles from Terraform state if necessary
-      - name: Clean Up Terraform State
+      # Deploy with Terraform
+      - name: Deploy Shop Service Infrastructure
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
-          terraform state rm aws_iam_role.auth-service_execution_role || true
-          terraform state rm aws_iam_role.shop-service_execution_role || true
-
-      # Run Terraform Destroy (optional, to ensure a clean slate)
-      - name: Terraform Destroy
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
-
-      - name: Cleanup Existing Lambda Functions
-        run: |
-          aws lambda delete-function --function-name auth-service || true
-          aws lambda delete-function --function-name shop-service || true
-
-      # Validate Terraform configuration
-      - name: Terraform Validate
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform validate
-
-      # Plan Terraform changes
-      - name: Terraform Plan
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -var-file=env/${{ env.tfvars_file }}
-
-      # Apply Terraform changes
-      - name: Terraform Apply
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
-
-      # Verify Deployment
-      - name: Verify Deployment
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: |
-          echo "API Gateway URL:"
-          terraform output -raw api_gateway_url
+          terraform init
+          terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
