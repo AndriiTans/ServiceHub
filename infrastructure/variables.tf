@@ -14,3 +14,8 @@ variable "shop_db_url" {
 variable "jwt_secret_key" {
   description = "JWT secret key for authentication"
 }
+
+variable "aws_region" {
+  description = "The AWS region to deploy resources in"
+  type        = string
+}
