@@ -3,8 +3,8 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main         # Deploy when changes are pushed to the main branch (Production)
-      - deployment   # Deploy when changes are pushed to the deployment branch (Development)
+      - main
+      - deployment
 
 jobs:
   deploy:
@@ -18,15 +18,15 @@ jobs:
       TF_WORKING_DIR: infrastructure
 
     steps:
-      # Print Environment Variables (Debugging)
+      # Print environment variables for debugging
       - name: Print all environment variables
         run: printenv
 
-      # Checkout Code
+      # Checkout the repository
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Set Environment Variables Based on Branch
+      # Set environment based on branch
       - name: Set Environment
         id: env
         run: |
@@ -44,27 +44,42 @@ jobs:
         with:
           node-version: 18
 
-      # Install Dependencies for Services
+      # Install dependencies for services
       - name: Install Dependencies for Services
         working-directory: services
         run: |
           cd auth-service && npm install && npm run build
           cd ../shop-service && npm install && npm run build
 
-      # Package Lambda Functions for Deployment
+      # Package Lambda functions for deployment
       - name: Package Lambda Functions
         working-directory: services
         run: |
+          # Ensure the output directory exists
+          mkdir -p ../../infrastructure/lambda
+
           # Auth Service
           cd auth-service
           npm install --only=production
           zip -r auth-service.zip index.js node_modules package.json
           mv auth-service.zip ../../infrastructure/lambda/auth-service.zip
-          cd ../shop-service
+
           # Shop Service
+          cd ../shop-service
           npm install --only=production
           zip -r shop-service.zip index.js node_modules package.json
           mv shop-service.zip ../../infrastructure/lambda/shop-service.zip
+
+      # Verify ZIP files
+      - name: Verify ZIP Files
+        run: |
+          if [[ ! -f "infrastructure/lambda/auth-service.zip" ]]; then
+            echo "Error: auth-service.zip does not exist!" && exit 1
+          fi
+          if [[ ! -f "infrastructure/lambda/shop-service.zip" ]]; then
+            echo "Error: shop-service.zip does not exist!" && exit 1
+          fi
+          echo "Both ZIP files exist."
 
       # Set up Terraform
       - name: Set up Terraform
@@ -77,29 +92,29 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform init
 
-      # Clean Up Existing State (Optional for Fresh Deployments)
+      # Clean up existing roles from Terraform state if necessary
       - name: Clean Up Terraform State
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           terraform state rm aws_iam_role.auth-service_execution_role || true
           terraform state rm aws_iam_role.shop-service_execution_role || true
 
-      # Conditional Terraform Destroy for Non-Production
+      # Run Terraform Destroy (optional, to ensure a clean slate)
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
 
-      # Validate Terraform Configuration
+      # Validate Terraform configuration
       - name: Terraform Validate
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform validate
 
-      # Terraform Plan
+      # Plan Terraform changes
       - name: Terraform Plan
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -var-file=env/${{ env.tfvars_file }}
 
-      # Terraform Apply
+      # Apply Terraform changes
       - name: Terraform Apply
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
