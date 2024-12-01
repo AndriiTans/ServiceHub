@@ -37,9 +37,9 @@ async function createApp() {
 
   app.useGlobalFilters(new AllExceptionsFilter(), new HttpExceptionFilter());
 
-  await AppDataSource.initialize()
-    .then(() => Logger.log('Data Source has been initialized!'))
-    .catch((error) => Logger.error('Error during Data Source initialization', error));
+  // await AppDataSource.initialize()
+  //   .then(() => Logger.log('Data Source has been initialized!'))
+  //   .catch((error) => Logger.error('Error during Data Source initialization', error));
 
   // const customerCount = await AppDataSource.manager.count('customers');
   // if (customerCount === 0) {
