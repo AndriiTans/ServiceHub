@@ -5,7 +5,7 @@ const path = require('path');
 const listFiles = (dir) => {
   console.log(`Contents of ${dir}:`);
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
-    if (entry.name === 'node_modules') return; // Skip node_modules
+    if (entry.name !== 'scripts') return; // Skip node_modules
     const fullPath = path.join(dir, entry.name);
     console.log(entry.isDirectory() ? `[DIR] ${fullPath}` : fullPath);
     if (entry.isDirectory()) listFiles(fullPath); // Recurse into subdirectories
