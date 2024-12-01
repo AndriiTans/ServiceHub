@@ -5,35 +5,45 @@ const path = require('path');
 const listFiles = (dir) => {
   console.log(`Contents of ${dir}:`);
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
-    if (entry.name !== 'scripts') return; // Skip node_modules
+    if (entry.name === 'node_modules') return; // Skip node_modules
     const fullPath = path.join(dir, entry.name);
     console.log(entry.isDirectory() ? `[DIR] ${fullPath}` : fullPath);
     if (entry.isDirectory()) listFiles(fullPath); // Recurse into subdirectories
   });
 };
 
-const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
+const createLambdaFunction = async (
+  functionName,
+  roleArn,
+  zipFilePath,
+  handler = 'dist/index.handler',
+) => {
   const client = new LambdaClient({ region: 'us-east-1' });
   console.log('Current working directory:', process.cwd());
+
   const currentDir = process.cwd();
-  listFiles(currentDir);
   listFiles(`${currentDir}/scripts`);
   console.log('zipFilePath');
   console.log('zipFilePath -> ', zipFilePath);
   console.log('zipFilePath');
+
   if (!fs.existsSync(zipFilePath)) {
     throw new Error(`ZIP file not found: ${zipFilePath}`);
   }
 
+  console.log('ZIP file found, reading file...');
+  const zipFile = fs.readFileSync(zipFilePath);
+  console.log('zipFile ->>', zipFile);
+
   const params = {
     FunctionName: functionName,
     Role: roleArn,
-    Runtime: 'nodejs18.x',
-    Handler: handler,
-    Code: {
-      ZipFile: fs.readFileSync(zipFilePath),
-    },
+    Runtime: 'nodejs18.x', // Runtime обов'язковий
+    Handler: handler, // Handler обов'язковий
+    Code: { ZipFile: zipFile },
   };
+
+  console.log('Creating Lambda function with parameters:', params);
 
   try {
     const command = new CreateFunctionCommand(params);
