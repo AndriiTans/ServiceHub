@@ -1,14 +1,15 @@
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
+import { Callback, Context, Handler } from 'aws-lambda';
+import serverlessExpress from '@codegenie/serverless-express';
 import { AppModule } from './app.module';
 import { AppDataSource } from './config/data-source';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import serverlessExpress from '@vendia/serverless-express';
 
-let server: any; // Holds the serverlessExpress instance for reuse
+let server: Handler; // Holds the serverlessExpress instance for reuse
 
 async function createApp() {
   const app = await NestFactory.create(AppModule);
@@ -63,17 +64,21 @@ async function bootstrap() {
   Logger.log(`🚀 shop-service is running and listening on port - ${port}`);
 }
 
-// Lambda handler
-export const handler = async (event: any, context: any) => {
-  if (!server) {
-    const app = await createApp();
-    await app.init(); // Ensures NestJS lifecycle hooks are triggered
-    server = serverlessExpress({ app: app.getHttpAdapter().getInstance() });
-  }
-  return server(event, context);
-};
-
-// Run locally if not in a Lambda environment
-if (process.env.NODE_ENV !== 'production') {
-  bootstrap();
+async function bootstrapServerless(): Promise<Handler> {
+  console.log('bootstrapServerless');
+  const app = await createApp();
+  console.log('const app = await createApp();');
+  await app.init();
+  console.log('await app.init();');
+  const expressApp = app.getHttpAdapter().getInstance();
+  return serverlessExpress({ app: expressApp });
 }
+
+// if (process.env.NODE_ENV === 'dev') {
+//   bootstrap();
+// }
+
+export const handler: Handler = async (event: any, context: Context, callback: Callback) => {
+  server = server ?? (await bootstrapServerless());
+  return server(event, context, callback);
+};
