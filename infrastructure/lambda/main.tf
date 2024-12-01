@@ -38,10 +38,10 @@ resource "aws_lambda_function" "auth_service" {
 resource "aws_lambda_function" "shop_service" {
   function_name = "shop-service"
   timeout       = 10
-  handler       = "dist/main.handler"
+  handler       = "dist/src/main.handler" # Update the handler path to include "src/"
   runtime       = var.runtime
   role          = aws_iam_role.lambda_execution_role.arn
-  filename      = "${path.module}/dist-package-shop.zip" # Ensure this ZIP contains `dist/main.js`
+  filename      = "${path.module}/dist-package-shop.zip"
   environment {
     variables = var.environment
   }
