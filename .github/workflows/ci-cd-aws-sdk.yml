@@ -21,17 +21,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Set environment based on branch
-      - name: Set Environment
-        id: env
+      - name: Print Debug Info (Remove in production)
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
-            echo "env_name=prod" >> $GITHUB_ENV
-            echo "tfvars_file=prod.tfvars" >> $GITHUB_ENV
-          else
-            echo "env_name=dev" >> $GITHUB_ENV
-            echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
-          fi
+          echo "DB Host: $SHOP_SERVICE_DB_HOST"
+          echo "DB Password: $SHOP_SERVICE_DB_PASSWORD"
+          echo "DB Port: $SHOP_SERVICE_DB_PORT"
+          echo "DB User: $SHOP_SERVICE_DB_USER"
+          echo "DB Name: $SHOP_SERVICE_DB_NAME"
+
+      # Set environment based on branch
+      # - name: Set Environment
+      #   id: env
+      #   run: |
+      #     if [[ "${{ github.ref_name }}" == "main" ]]; then
+      #       echo "env_name=prod" >> $GITHUB_ENV
+      #       echo "tfvars_file=prod.tfvars" >> $GITHUB_ENV
+      #     else
+      #       echo "env_name=dev" >> $GITHUB_ENV
+      #       echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
+      #     fi
 
 
       # Set up Node.js
