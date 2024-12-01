@@ -29,4 +29,4 @@ const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler)
   }
 };
 
-module.exports = createLambdaFunction;
+module.exports = { createLambda: createLambdaFunction };
