@@ -68,7 +68,7 @@ jobs:
           echo "After prune - Contents of auth-service:"
           ls -lah
           zip -r auth-service.zip dist node_modules package.json
-          mv auth-service.zip ../../../infrastructure/lambda/dist-package-auth.zip
+          mv auth-service.zip ../../infrastructure/lambda/dist-package-auth.zip
           echo "After moving"
           ls -lah
           cd ..
