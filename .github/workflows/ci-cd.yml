@@ -48,43 +48,25 @@ jobs:
         run: |
           # Install all dependencies (including devDependencies) for the build step
           cd auth-service && npm install
-          echo "Contents of auth-service after npm install:"
-          ls -lah
           cd ../shop-service && npm install
-          echo "Contents of shop-service after npm install:"
-          ls -lah
 
       - name: Build and Package Lambda Functions
         working-directory: services
         run: |
           # Auth Service
           cd auth-service
-          echo "Before build - Contents of auth-service:"
-          ls -lah
           npm run build
-          echo "After build - Contents of auth-service:"
-          ls -lah
           npm prune --production # Remove devDependencies after the build
-          echo "After prune - Contents of auth-service:"
-          ls -lah
           zip -r auth-service.zip dist node_modules package.json
           mv auth-service.zip ../../infrastructure/lambda/dist-package-auth.zip
-          echo "After moving"
-          ls -lah
           cd ..
 
           # Shop Service
           cd shop-service
-          echo "Before build - Contents of shop-service:"
-          ls -lah
           npm run build
-          echo "After build - Contents of shop-service:"
-          ls -lah
           npm prune --production # Remove devDependencies after the build
-          echo "After prune - Contents of shop-service:"
-          ls -lah
           zip -r shop-service.zip dist node_modules package.json
-          mv shop-service.zip ../../../infrastructure/lambda/dist-package-shop.zip
+          mv shop-service.zip ../../infrastructure/lambda/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
       - name: Verify and Inspect ZIP Files
