@@ -1,8 +1,19 @@
 const { LambdaClient, CreateFunctionCommand } = require('@aws-sdk/client-lambda');
 const fs = require('fs');
 
+const listFiles = (dir) => {
+  console.log(`Contents of ${dir}:`);
+  fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+    const fullPath = path.join(dir, entry.name);
+    console.log(entry.isDirectory() ? `[DIR] ${fullPath}` : fullPath);
+    if (entry.isDirectory()) listFiles(fullPath);
+  });
+};
+
 const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
   const client = new LambdaClient({ region: 'us-east-1' });
+  console.log('Current working directory:', process.cwd());
+  listFiles(currentDir);
   console.log('zipFilePath');
   console.log('zipFilePath -> ', zipFilePath);
   console.log('zipFilePath');
