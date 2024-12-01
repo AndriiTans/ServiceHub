@@ -32,7 +32,7 @@ const { createIAMRole } = require('./utils/createIAMRole');
           SHOP_SERVICE_DB_PORT: '3306',
           SHOP_SERVICE_DB_USER: 'admin',
           SHOP_SERVICE_DB_PASSWORD: process.env.SHOP_SERVICE_DB_PASSWORD,
-          SHOP_SERVICE_DB_NAME: 'shop-service-db',
+          SHOP_SERVICE_DB_NAME: 'shopdb',
         },
       },
     ];
