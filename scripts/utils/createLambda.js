@@ -13,7 +13,9 @@ const listFiles = (dir) => {
 const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
   const client = new LambdaClient({ region: 'us-east-1' });
   console.log('Current working directory:', process.cwd());
+  const currentDir = process.cwd();
   listFiles(currentDir);
+  listFiles(`${currentDir}/scripts`);
   console.log('zipFilePath');
   console.log('zipFilePath -> ', zipFilePath);
   console.log('zipFilePath');
