@@ -15,7 +15,7 @@ const { createIAMRole } = require('./utils/createIAMRole');
 
     // Step 2: Deploy Lambda Function
     console.log('Deploying Lambda Function...');
-    const lambdaArn = await createLambda(lambdaFunctionName, roleArn, './dist/my-lambda.zip');
+    const lambdaArn = await createLambda(lambdaFunctionName, roleArn, './dist-package-auth.zip');
     console.log(`Lambda Function deployed: ${lambdaArn}`);
 
     // Step 3: Set up API Gateway

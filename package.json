@@ -13,6 +13,7 @@
     "frontend-app"
   ],
   "dependencies": {
-    "aws-sdk": "^2.1692.0"
+    "@aws-sdk/client-iam": "^3.699.0",
+    "@aws-sdk/client-lambda": "^3.699.0"
   }
 }

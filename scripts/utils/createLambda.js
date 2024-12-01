@@ -1,23 +1,32 @@
-const AWS = require('aws-sdk');
+const { LambdaClient, CreateFunctionCommand } = require('@aws-sdk/client-lambda');
 const fs = require('fs');
 
-const lambda = new AWS.Lambda({ region: 'us-east-1' });
+const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
+  const client = new LambdaClient({ region: 'us-east-1' });
 
-const createLambda = async (functionName, roleArn, zipFilePath) => {
-  const zipFile = fs.readFileSync(zipFilePath);
+  if (!fs.existsSync(zipFilePath)) {
+    throw new Error(`ZIP file not found: ${zipFilePath}`);
+  }
 
   const params = {
     FunctionName: functionName,
-    Runtime: 'nodejs18.x',
     Role: roleArn,
-    Handler: 'dist/index.handler',
-    Code: { ZipFile: zipFile },
-    Timeout: 10,
-    MemorySize: 128,
+    Runtime: 'nodejs18.x',
+    Handler: handler,
+    Code: {
+      ZipFile: fs.readFileSync(zipFilePath),
+    },
   };
 
-  const response = await lambda.createFunction(params).promise();
-  return response.FunctionArn;
+  try {
+    const command = new CreateFunctionCommand(params);
+    const response = await client.send(command);
+    console.log('Lambda function created:', response.FunctionArn);
+    return response.FunctionArn;
+  } catch (error) {
+    console.error('Error creating Lambda function:', error);
+    throw error;
+  }
 };
 
-module.exports = { createLambda };
+module.exports = createLambdaFunction;

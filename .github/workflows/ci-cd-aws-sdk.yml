@@ -56,7 +56,7 @@ jobs:
           npm run build
           npm prune --production # Remove devDependencies after the build
           zip -r auth-service.zip dist node_modules package.json
-          mv auth-service.zip ../../infrastructure/lambda/dist-package-auth.zip
+          mv auth-service.zip ../../scripts/lambda/dist-package-auth.zip
           cd ..
 
           # Shop Service
@@ -64,7 +64,7 @@ jobs:
           npm run build
           npm prune --production # Remove devDependencies after the build
           zip -r shop-service.zip dist node_modules package.json
-          mv shop-service.zip ../../infrastructure/lambda/dist-package-shop.zip
+          mv shop-service.zip ../../scripts/lambda/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
       - name: Verify and Inspect ZIP Files

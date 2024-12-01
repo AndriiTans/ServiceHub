@@ -1,35 +1,21 @@
-const AWS = require('aws-sdk');
+const { IAMClient, CreateRoleCommand } = require('@aws-sdk/client-iam');
 
-const iam = new AWS.IAM();
+const createIAMRole = async (roleName, policyDocument) => {
+  const client = new IAMClient({ region: 'us-east-1' });
+  const params = {
+    RoleName: roleName,
+    AssumeRolePolicyDocument: JSON.stringify(policyDocument),
+  };
 
-const createIAMRole = async (roleName) => {
-  const assumeRolePolicyDocument = JSON.stringify({
-    Version: '2012-10-17',
-    Statement: [
-      {
-        Effect: 'Allow',
-        Principal: { Service: 'lambda.amazonaws.com' },
-        Action: 'sts:AssumeRole',
-      },
-    ],
-  });
-
-  const role = await iam
-    .createRole({
-      RoleName: roleName,
-      AssumeRolePolicyDocument: assumeRolePolicyDocument,
-    })
-    .promise();
-
-  // Attach AWSLambdaBasicExecutionRole policy
-  await iam
-    .attachRolePolicy({
-      RoleName: roleName,
-      PolicyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-    })
-    .promise();
-
-  return role.Arn;
+  try {
+    const command = new CreateRoleCommand(params);
+    const response = await client.send(command);
+    console.log('IAM Role created:', response.Role.Arn);
+    return response.Role.Arn;
+  } catch (error) {
+    console.error('Error creating IAM Role:', error);
+    throw error;
+  }
 };
 
-module.exports = { createIAMRole };
+module.exports = createIAMRole;
