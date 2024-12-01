@@ -59,6 +59,7 @@ const createLambdaFunction = async (
     // Update environment variables
     const updateFunctionConfigCommand = new UpdateFunctionConfigurationCommand({
       FunctionName: functionName,
+      Timeout: 15,
       Environment: {
         Variables: environmentVars,
       },
@@ -74,6 +75,7 @@ const createLambdaFunction = async (
       const zipFile = fs.readFileSync(zipFilePath);
       const createFunctionCommand = new CreateFunctionCommand({
         FunctionName: functionName,
+        Timeout: 15,
         Role: roleArn,
         Runtime: 'nodejs18.x',
         Handler: handler,
