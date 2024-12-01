@@ -24,7 +24,8 @@ const createIAMRole = async (roleName) => {
     console.log(`Role already exists: ${response.Role.Arn}`);
     return response.Role.Arn;
   } catch (error) {
-    if (error.name === 'NoSuchEntity') {
+    // Handle case where the role doesn't exist
+    if (error.name === 'NoSuchEntity' || error.message.includes('cannot be found')) {
       console.log(`Role "${roleName}" does not exist. Creating it...`);
 
       // Role does not exist, create it
