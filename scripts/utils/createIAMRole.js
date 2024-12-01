@@ -1,4 +1,4 @@
-const { IAMClient, CreateRoleCommand } = require('@aws-sdk/client-iam');
+const { IAMClient, CreateRoleCommand, GetRoleCommand } = require('@aws-sdk/client-iam');
 
 const createIAMRole = async (roleName) => {
   const client = new IAMClient({ region: 'us-east-1' });
@@ -15,18 +15,33 @@ const createIAMRole = async (roleName) => {
     ],
   };
 
-  const params = {
-    RoleName: roleName,
-    AssumeRolePolicyDocument: JSON.stringify(policyDocument),
-  };
-
   try {
-    const command = new CreateRoleCommand(params);
-    const response = await client.send(command);
-    console.log('IAM Role created:', response.Role.Arn);
+    // Check if the role already exists
+    console.log(`Checking if role "${roleName}" exists...`);
+    const getRoleCommand = new GetRoleCommand({ RoleName: roleName });
+    const response = await client.send(getRoleCommand);
+
+    console.log(`Role already exists: ${response.Role.Arn}`);
     return response.Role.Arn;
   } catch (error) {
-    console.error('Error creating IAM Role:', error.message);
+    if (error.name === 'NoSuchEntity') {
+      console.log(`Role "${roleName}" does not exist. Creating it...`);
+
+      // Role does not exist, create it
+      const params = {
+        RoleName: roleName,
+        AssumeRolePolicyDocument: JSON.stringify(policyDocument),
+      };
+
+      const createRoleCommand = new CreateRoleCommand(params);
+      const createResponse = await client.send(createRoleCommand);
+
+      console.log('IAM Role created:', createResponse.Role.Arn);
+      return createResponse.Role.Arn;
+    }
+
+    // Other errors
+    console.error('Error checking or creating IAM Role:', error.message);
     throw error;
   }
 };
