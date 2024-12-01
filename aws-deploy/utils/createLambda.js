@@ -2,6 +2,7 @@ const {
   LambdaClient,
   CreateFunctionCommand,
   UpdateFunctionCodeCommand,
+  UpdateFunctionConfigurationCommand,
   GetFunctionCommand,
 } = require('@aws-sdk/client-lambda');
 const fs = require('fs');
@@ -17,10 +18,17 @@ const listFiles = (dir) => {
   });
 };
 
-const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
+const createLambdaFunction = async (
+  functionName,
+  roleArn,
+  zipFilePath,
+  handler,
+  environmentVars,
+) => {
+  console.log('environmentVars ---> ', environmentVars);
   const client = new LambdaClient({ region: 'us-east-1' });
 
-  console.log('Checking if Lambda function already exists...');
+  console.log(`Deploying Lambda Function: ${functionName}`);
   try {
     console.log('Current working directory:', process.cwd());
 
@@ -35,23 +43,29 @@ const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler)
     }
 
     console.log('ZIP file found, reading file...');
-
     const getFunctionCommand = new GetFunctionCommand({ FunctionName: functionName });
     await client.send(getFunctionCommand);
     console.log(`Lambda function "${functionName}" already exists. Updating...`);
 
-    // Update the existing function
+    // Update existing Lambda function code
     const zipFile = fs.readFileSync(zipFilePath);
-
-    console.log('zipFile ->>', zipFile);
-
     const updateFunctionCodeCommand = new UpdateFunctionCodeCommand({
       FunctionName: functionName,
       ZipFile: zipFile,
     });
-    const updateResponse = await client.send(updateFunctionCodeCommand);
-    console.log(`Lambda function updated: ${updateResponse.FunctionArn}`);
-    return updateResponse.FunctionArn;
+    const updateCodeResponse = await client.send(updateFunctionCodeCommand);
+    console.log(`Updated Lambda function code for: ${updateCodeResponse.FunctionArn}`);
+
+    // Update environment variables
+    const updateFunctionConfigCommand = new UpdateFunctionConfigurationCommand({
+      FunctionName: functionName,
+      Environment: {
+        Variables: environmentVars,
+      },
+    });
+    const updateConfigResponse = await client.send(updateFunctionConfigCommand);
+    console.log(`Updated Lambda environment variables for: ${updateConfigResponse.FunctionArn}`);
+    return updateCodeResponse.FunctionArn;
   } catch (error) {
     if (error.name === 'ResourceNotFoundException') {
       console.log(`Lambda function "${functionName}" does not exist. Creating it...`);
@@ -66,14 +80,16 @@ const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler)
         Code: {
           ZipFile: zipFile,
         },
+        Environment: {
+          Variables: environmentVars,
+        },
       });
       const createResponse = await client.send(createFunctionCommand);
       console.log(`Lambda function created: ${createResponse.FunctionArn}`);
       return createResponse.FunctionArn;
     }
 
-    // Re-throw other errors
-    console.error('Error while checking/creating Lambda function:', error.message);
+    console.error('Error creating/updating Lambda function:', error.message);
     throw error;
   }
 };

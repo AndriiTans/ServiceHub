@@ -4,7 +4,6 @@ const { createIAMRole } = require('./utils/createIAMRole');
 
 (async () => {
   try {
-    // Define roles, functions, and API details for both services
     const services = [
       {
         roleName: 'auth-service-role',
@@ -13,6 +12,13 @@ const { createIAMRole } = require('./utils/createIAMRole');
         handler: 'dist/index.handler',
         apiName: 'auth-api-gateway',
         endpointPath: 'auth-endpoint',
+        environmentVars: {
+          SHOP_SERVICE_DB_HOST: process.env.SHOP_SERVICE_DB_HOST,
+          SHOP_SERVICE_DB_PORT: '3306',
+          SHOP_SERVICE_DB_USER: 'admin',
+          SHOP_SERVICE_DB_PASSWORD: process.env.SHOP_SERVICE_DB_PASSWORD,
+          SHOP_SERVICE_DB_NAME: 'auth-service-db',
+        },
       },
       {
         roleName: 'shop-service-role',
@@ -21,6 +27,13 @@ const { createIAMRole } = require('./utils/createIAMRole');
         handler: 'dist/src/main.handler',
         apiName: 'shop-api-gateway',
         endpointPath: 'shop-endpoint',
+        environmentVars: {
+          SHOP_SERVICE_DB_HOST: process.env.SHOP_SERVICE_DB_HOST,
+          SHOP_SERVICE_DB_PORT: '3306',
+          SHOP_SERVICE_DB_USER: 'admin',
+          SHOP_SERVICE_DB_PASSWORD: process.env.SHOP_SERVICE_DB_PASSWORD,
+          SHOP_SERVICE_DB_NAME: 'shop-service-db',
+        },
       },
     ];
 
@@ -39,6 +52,7 @@ const { createIAMRole } = require('./utils/createIAMRole');
         roleArn,
         service.zipFilePath,
         service.handler,
+        service.environmentVars,
       );
       console.log(`Lambda Function deployed for ${service.lambdaFunctionName}: ${lambdaArn}`);
 
