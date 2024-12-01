@@ -31,10 +31,10 @@ import { OrderModule } from './orders/order.module';
       // It is turned off in production to prevent exposing sensitive API details
       playground: process.env.NODE_ENV !== 'production',
     }),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'uploads'),
-      serveRoot: '/uploads',
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: join(__dirname, '..', 'uploads'),
+    //   serveRoot: '/uploads',
+    // }),
     CustomerModule,
     ShopModule,
     ProductModule,
