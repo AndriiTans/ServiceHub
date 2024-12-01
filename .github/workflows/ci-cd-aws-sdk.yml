@@ -91,6 +91,22 @@ jobs:
           # echo "Contents of dist-package-shop.zip:"
           # unzip -l scripts/dist-package-shop.zip
 
+
+      - name: Install Tree
+        run: sudo apt-get update && sudo apt-get install -y tree
+
+      - name: Print Directory Structure
+        run: |
+          echo "Full directory structure:"
+          tree -a
+          echo "scripts directory structure:"
+          tree scripts
+
+      - name: Recursively List All Files
+        run: |
+          echo "Recursive file list from root:"
+          find .
+
       # Run deployment script
       - name: Deploy to AWS
         run: node scripts/deploy.js
