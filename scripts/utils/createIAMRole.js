@@ -5,6 +5,8 @@ const {
   AttachRolePolicyCommand,
 } = require('@aws-sdk/client-iam');
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const createIAMRole = async (roleName) => {
   const client = new IAMClient({ region: 'us-east-1' });
   const assumeRolePolicyDocument = {
@@ -13,7 +15,7 @@ const createIAMRole = async (roleName) => {
       {
         Effect: 'Allow',
         Principal: {
-          Service: 'lambda.amazonaws.com', // Allows Lambda to assume this role
+          Service: 'lambda.amazonaws.com', // Lambda service
         },
         Action: 'sts:AssumeRole',
       },
@@ -25,14 +27,13 @@ const createIAMRole = async (roleName) => {
     console.log(`Checking if role "${roleName}" exists...`);
     const getRoleCommand = new GetRoleCommand({ RoleName: roleName });
     const response = await client.send(getRoleCommand);
-
     console.log(`Role already exists: ${response.Role.Arn}`);
     return response.Role.Arn;
   } catch (error) {
     if (error.name === 'NoSuchEntity' || error.message.includes('cannot be found')) {
       console.log(`Role "${roleName}" does not exist. Creating it...`);
 
-      // Role does not exist, create it
+      // Create the role
       const createRoleCommand = new CreateRoleCommand({
         RoleName: roleName,
         AssumeRolePolicyDocument: JSON.stringify(assumeRolePolicyDocument),
@@ -41,18 +42,19 @@ const createIAMRole = async (roleName) => {
 
       console.log('IAM Role created:', createResponse.Role.Arn);
 
-      // Attach the AWSLambdaBasicExecutionRole policy to the role
+      // Attach the AWSLambdaBasicExecutionRole policy
       const attachPolicyCommand = new AttachRolePolicyCommand({
         RoleName: roleName,
         PolicyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
       });
       await client.send(attachPolicyCommand);
-      console.log(`Attached AWSLambdaBasicExecutionRole policy to ${roleName}`);
+      console.log(`Policy AWSLambdaBasicExecutionRole attached to role: ${roleName}`);
 
+      // Wait for the role to be fully available
+      await sleep(5000); // Wait for 5 seconds
       return createResponse.Role.Arn;
     }
 
-    // Other errors
     console.error('Error checking or creating IAM Role:', error.message);
     throw error;
   }
