@@ -29,8 +29,9 @@ export const DatabaseConfig: TypeOrmModuleOptions = {
   synchronize: true,
 
   // Enable logging for SQL queries if specified in the environment
-  logging: process.env.TYPEORM_LOGGING === 'true',
-
+  // logging: process.env.TYPEORM_LOGGING === 'true',
+  logging: true,
+  logger: 'advanced-console',
   // Specify the location of the migrations
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 
