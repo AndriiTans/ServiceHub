@@ -1,10 +1,10 @@
-name: Deploy to AWS
+name: Deploy to AWS using Terraform
 
 on:
   push:
     branches:
-      - master
-      - deployment
+      # - master
+      # - deployment
 
 jobs:
   deploy:
