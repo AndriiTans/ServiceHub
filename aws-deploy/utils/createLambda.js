@@ -25,7 +25,7 @@ const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler)
     console.log('Current working directory:', process.cwd());
 
     const currentDir = process.cwd();
-    listFiles(`${currentDir}/scripts`);
+    listFiles(`${currentDir}/aws-deploy`);
     console.log('zipFilePath');
     console.log('zipFilePath -> ', zipFilePath);
     console.log('zipFilePath');

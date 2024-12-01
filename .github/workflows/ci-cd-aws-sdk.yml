@@ -56,7 +56,7 @@ jobs:
           npm run build
           npm prune --production # Remove devDependencies after the build
           zip -r auth-service.zip dist node_modules package.json
-          mv auth-service.zip ../../scripts/dist-package-auth.zip
+          mv auth-service.zip ../../aws-deploy/dist-package-auth.zip
           cd ..
 
           # Shop Service
@@ -64,36 +64,36 @@ jobs:
           npm run build
           npm prune --production # Remove devDependencies after the build
           zip -r shop-service.zip dist node_modules package.json
-          mv shop-service.zip ../../scripts/dist-package-shop.zip
+          mv shop-service.zip ../../aws-deploy/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
       - name: Verify and Inspect ZIP Files
         run: |
-          if [[ ! -f "scripts/dist-package-auth.zip" ]]; then
+          if [[ ! -f "aws-deploy/dist-package-auth.zip" ]]; then
             echo "Error: dist-package-auth does not exist!" && exit 1
           fi
-          if [[ ! -f "scripts/dist-package-shop.zip" ]]; then
+          if [[ ! -f "aws-deploy/dist-package-shop.zip" ]]; then
             echo "Error: dist-package-shop.zip does not exist!" && exit 1
           fi
 
           echo "Both ZIP files exist. Checking sizes..."
 
           echo "Size of dist-package-auth.zip:"
-          du -h scripts/dist-package-auth.zip
+          du -h aws-deploy/dist-package-auth.zip
           echo "Size of dist-package-shop.zip:"
-          du -h scripts/dist-package-shop.zip
+          du -h aws-deploy/dist-package-shop.zip
 
           echo "Both ZIP files exist. Checking contents..."
 
           # echo "Contents of dist-package-auth.zip:"
-          # unzip -l scripts/dist-package-auth.zip
+          # unzip -l aws-deploy/dist-package-auth.zip
 
           # echo "Contents of dist-package-shop.zip:"
-          # unzip -l scripts/dist-package-shop.zip
+          # unzip -l aws-deploy/dist-package-shop.zip
 
       - name: List Root Directory Contents
         run: ls -la
 
       # Run deployment script
       - name: Deploy to AWS
-        run: node scripts/deploy.js
+        run: node aws-deploy/deploy.js

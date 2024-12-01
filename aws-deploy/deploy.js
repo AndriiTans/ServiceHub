@@ -9,7 +9,7 @@ const { createIAMRole } = require('./utils/createIAMRole');
       {
         roleName: 'auth-service-role',
         lambdaFunctionName: 'auth-service',
-        zipFilePath: './scripts/dist-package-auth.zip',
+        zipFilePath: './aws-deploy/dist-package-auth.zip',
         handler: 'dist/index.handler',
         apiName: 'auth-api-gateway',
         endpointPath: 'auth-endpoint',
@@ -17,7 +17,7 @@ const { createIAMRole } = require('./utils/createIAMRole');
       {
         roleName: 'shop-service-role',
         lambdaFunctionName: 'shop-service',
-        zipFilePath: './scripts/dist-package-shop.zip',
+        zipFilePath: './aws-deploy/dist-package-shop.zip',
         handler: 'dist/src/main.handler',
         apiName: 'shop-api-gateway',
         endpointPath: 'shop-endpoint',
