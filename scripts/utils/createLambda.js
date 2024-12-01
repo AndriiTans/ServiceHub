@@ -3,7 +3,9 @@ const fs = require('fs');
 
 const createLambdaFunction = async (functionName, roleArn, zipFilePath, handler) => {
   const client = new LambdaClient({ region: 'us-east-1' });
-
+  console.log('zipFilePath');
+  console.log('zipFilePath -> ', zipFilePath);
+  console.log('zipFilePath');
   if (!fs.existsSync(zipFilePath)) {
     throw new Error(`ZIP file not found: ${zipFilePath}`);
   }
