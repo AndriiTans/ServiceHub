@@ -8,9 +8,6 @@ const {
 const fs = require('fs');
 const path = require('path');
 
-// Retry logic with exponential backoff
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 const listFiles = (dir) => {
   console.log(`Contents of ${dir}:`);
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
@@ -30,8 +27,6 @@ const createLambdaFunction = async (
 ) => {
   console.log('environmentVars ---> ', environmentVars);
   const client = new LambdaClient({ region: 'us-east-1' });
-  const maxRetries = 5; // Number of retry attempts
-  const retryDelay = 2000; // Initial retry delay in milliseconds
 
   console.log(`Deploying Lambda Function: ${functionName}`);
   try {
@@ -54,39 +49,23 @@ const createLambdaFunction = async (
 
     // Update existing Lambda function code
     const zipFile = fs.readFileSync(zipFilePath);
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const updateFunctionCodeCommand = new UpdateFunctionCodeCommand({
-          FunctionName: functionName,
-          ZipFile: zipFile,
-        });
-        const updateCodeResponse = await client.send(updateFunctionCodeCommand);
-        console.log(`Updated Lambda function code for: ${updateCodeResponse.FunctionArn}`);
+    const updateFunctionCodeCommand = new UpdateFunctionCodeCommand({
+      FunctionName: functionName,
+      ZipFile: zipFile,
+    });
+    const updateCodeResponse = await client.send(updateFunctionCodeCommand);
+    console.log(`Updated Lambda function code for: ${updateCodeResponse.FunctionArn}`);
 
-        // Update environment variables
-        const updateFunctionConfigCommand = new UpdateFunctionConfigurationCommand({
-          FunctionName: functionName,
-          Environment: {
-            Variables: environmentVars,
-          },
-        });
-        const updateConfigResponse = await client.send(updateFunctionConfigCommand);
-        console.log(
-          `Updated Lambda environment variables for: ${updateConfigResponse.FunctionArn}`,
-        );
-        return updateCodeResponse.FunctionArn;
-      } catch (error) {
-        if (error.name === 'ResourceConflictException' && attempt < maxRetries) {
-          console.log(
-            `Update in progress, retrying in ${retryDelay}ms... (Attempt ${attempt}/${maxRetries})`,
-          );
-          await wait(retryDelay * attempt); // Exponential backoff
-          continue;
-        } else {
-          throw error; // Rethrow error if it's not retryable or max retries exceeded
-        }
-      }
-    }
+    // Update environment variables
+    const updateFunctionConfigCommand = new UpdateFunctionConfigurationCommand({
+      FunctionName: functionName,
+      Environment: {
+        Variables: environmentVars,
+      },
+    });
+    const updateConfigResponse = await client.send(updateFunctionConfigCommand);
+    console.log(`Updated Lambda environment variables for: ${updateConfigResponse.FunctionArn}`);
+    return updateCodeResponse.FunctionArn;
   } catch (error) {
     if (error.name === 'ResourceNotFoundException') {
       console.log(`Lambda function "${functionName}" does not exist. Creating it...`);
