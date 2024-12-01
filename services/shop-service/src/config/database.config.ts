@@ -25,7 +25,8 @@ export const DatabaseConfig: TypeOrmModuleOptions = {
   entities: [__dirname + '/../**/*.entity{.ts,.js}'],
 
   // Synchronize the database schema (use only in development)
-  synchronize: process.env.TYPEORM_SYNC === 'true',
+  // synchronize: process.env.TYPEORM_SYNC === 'true',
+  synchronize: true,
 
   // Enable logging for SQL queries if specified in the environment
   logging: process.env.TYPEORM_LOGGING === 'true',
