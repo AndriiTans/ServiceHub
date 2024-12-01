@@ -50,6 +50,7 @@ jobs:
       - name: Build and Package Lambda Functions
         working-directory: services
         run: |
+          npm install
           # Auth Service
           cd auth-service
           npm run build

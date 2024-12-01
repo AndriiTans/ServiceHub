@@ -11,5 +11,8 @@
     "auth-service",
     "shop-service",
     "frontend-app"
-  ]
+  ],
+  "dependencies": {
+    "aws-sdk": "^2.1692.0"
+  }
 }
