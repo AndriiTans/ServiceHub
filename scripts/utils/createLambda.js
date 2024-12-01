@@ -1,5 +1,6 @@
 const { LambdaClient, CreateFunctionCommand } = require('@aws-sdk/client-lambda');
 const fs = require('fs');
+const path = require('path');
 
 const listFiles = (dir) => {
   console.log(`Contents of ${dir}:`);
