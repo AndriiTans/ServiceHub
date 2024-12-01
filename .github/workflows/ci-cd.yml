@@ -87,11 +87,11 @@ jobs:
 
           echo "Both ZIP files exist. Checking contents..."
 
-          echo "Contents of dist-package-auth.zip:"
-          unzip -l infrastructure/lambda/dist-package-auth.zip
+          # echo "Contents of dist-package-auth.zip:"
+          # unzip -l infrastructure/lambda/dist-package-auth.zip
 
-          echo "Contents of dist-package-shop.zip:"
-          unzip -l infrastructure/lambda/dist-package-shop.zip
+          # echo "Contents of dist-package-shop.zip:"
+          # unzip -l infrastructure/lambda/dist-package-shop.zip
 
 
       # Set up Terraform
