@@ -110,6 +110,6 @@ jobs:
       - name: List Root Directory Contents
         run: ls -la
 
-      # Run deployment script
+      # Run deployment script AWS CLI
       - name: Deploy to AWS
         run: node aws-deploy/deploy.js
