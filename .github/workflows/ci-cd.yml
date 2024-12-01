@@ -38,35 +38,34 @@ jobs:
             echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
           fi
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
 
-      - name: Install Dependencies for Services
+      - name: Install Dependencies for Build
         working-directory: services
         run: |
-          # Install production and development dependencies for all services
+          # Install all dependencies (including devDependencies) for the build step
           cd auth-service && npm install
           cd ../shop-service && npm install
 
-      - name: Minify and Package Lambda Functions
+      - name: Build and Package Lambda Functions
         working-directory: services
         run: |
           # Auth Service
           cd auth-service
           npm run build
-          cd dist
-          zip -r auth-service.zip .
+          npm prune --production # Remove devDependencies after the build
+          zip -r auth-service.zip dist node_modules package.json
           mv auth-service.zip ../../../infrastructure/lambda/dist-package-auth.zip
-          cd ../../
+          cd ..
 
           # Shop Service
           cd shop-service
           npm run build
-          cd dist
-          zip -r shop-service.zip .
+          npm prune --production # Remove devDependencies after the build
+          zip -r shop-service.zip dist node_modules package.json
           mv shop-service.zip ../../../infrastructure/lambda/dist-package-shop.zip
 
       # Verify ZIP files and check their contents
