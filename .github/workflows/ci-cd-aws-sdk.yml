@@ -16,6 +16,14 @@ jobs:
       AWS_DEFAULT_REGION: us-east-1
       TF_WORKING_DIR: infrastructure
 
+      SHOP_SERVICE_DB_HOST: ${{ secrets.SHOP_SERVICE_DB_HOST }}
+      SHOP_SERVICE_DB_PASSWORD: ${{ secrets.SHOP_SERVICE_DB_PASSWORD }}
+      # Non-sensitive variables from repository variables
+      SHOP_SERVICE_DB_PORT: ${{ vars.SHOP_SERVICE_DB_PORT }}
+      SHOP_SERVICE_DB_USER: ${{ vars.SHOP_SERVICE_DB_USER }}
+      SHOP_SERVICE_DB_NAME: ${{ vars.SHOP_SERVICE_DB_NAME }}
+      TYPEORM_SYNC: 'true'
+
     steps:
       # Checkout code
       - name: Checkout Code
