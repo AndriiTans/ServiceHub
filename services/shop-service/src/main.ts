@@ -112,7 +112,7 @@ async function createApp(expressApp: express.Express) {
 async function bootstrapServerless(): Promise<Handler> {
   console.log('express');
   console.log('express -> ', express);
-  console.log('express');
+  console.log('serverlessExpress -> ', serverlessExpress);
   const expressApp = express();
   const nestApp = await createApp(expressApp);
 
