@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { Callback, Context, Handler } from 'aws-lambda';
-import serverlessExpress from '@codegenie/serverless-express';
+// import serverlessExpress from '@codegenie/serverless-express';
 import { AppModule } from './app.module';
 import { AppDataSource } from './config/data-source';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -11,6 +11,7 @@ import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ExpressAdapter } from '@nestjs/platform-express';
 const express = require('express');
+const serverlessExpress = require('@codegenie/serverless-express');
 
 let server: Handler; // Holds the serverlessExpress instance for reuse
 
