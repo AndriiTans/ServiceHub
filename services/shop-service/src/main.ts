@@ -1,5 +1,5 @@
 import helmet from 'helmet';
-import express from 'express';
+// import express from 'express';
 import { NestFactory } from '@nestjs/core';
 import { Logger, RequestMethod, ValidationPipe } from '@nestjs/common';
 import { Callback, Context, Handler } from 'aws-lambda';
@@ -10,6 +10,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ExpressAdapter } from '@nestjs/platform-express';
+const express = require('express');
 
 let server: Handler; // Holds the serverlessExpress instance for reuse
 
@@ -66,7 +67,8 @@ let server: Handler; // Holds the serverlessExpress instance for reuse
 //   Logger.log(`🚀 shop-service is running and listening on port - ${port}`);
 // }
 
-async function createApp(expressApp: express.Express) {
+// async function createApp(expressApp: express.Express) {
+async function createApp(expressApp: any) {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp));
 
   app.setGlobalPrefix('v1', {
