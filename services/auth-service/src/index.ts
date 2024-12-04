@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(logger);
 
-app.use('/', apiRoutes);
+app.use('/api', apiRoutes);
 
 app.get('/health', (req, res) => {
   res.status(200).send('OK');

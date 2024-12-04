@@ -35,7 +35,7 @@ export class ShopService {
     });
   }
 
-  async getShopByUserId(userId: number): Promise<Shop> {
+  async getShopByUserId(userId: string): Promise<Shop> {
     return this.shopRepository.findOne({
       where: { owner: { userId } },
       relations: ['owner'],
@@ -64,7 +64,7 @@ export class ShopService {
     return savedShop;
   }
 
-  async updateShop(userId: number, shopUpdateInput: ShopUpdateDto): Promise<Shop> {
+  async updateShop(userId: string, shopUpdateInput: ShopUpdateDto): Promise<Shop> {
     const existingShop = await this.shopRepository.findOne({
       where: { owner: { userId } },
       relations: ['owner'],

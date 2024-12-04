@@ -194,7 +194,7 @@ export async function seed() {
     await AppDataSource.manager.save(address);
 
     const customer = new Customer();
-    customer.userId = i;
+    customer.userId = String(i);
     customer.email = `customer${i}@example.com`;
     customer.role = i % 2 === 0 ? UserRole.Member : UserRole.Member;
     customer.firstName = firstNames[Math.floor(Math.random() * firstNames.length)];

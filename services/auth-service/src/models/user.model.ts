@@ -1,14 +1,7 @@
-import { Exclude } from 'class-transformer';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import mongoose, { Schema, Document } from 'mongoose';
 
-export interface IUser {
-  id: number;
+export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
   password: string;
@@ -17,27 +10,34 @@ export interface IUser {
   updatedAt: Date;
 }
 
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+const UserSchema: Schema<IUser> = new mongoose.Schema<IUser>(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
+  },
+  {
+    timestamps: true, // Automatically create `createdAt` and `updatedAt`
+  },
+);
 
-  @Column({ type: 'varchar', length: 255, unique: true })
-  email: string;
+const User = mongoose.model<IUser>('User', UserSchema);
 
-  @Column()
-  name: string;
-
-  @Exclude()
-  @Column({ select: false })
-  password: string;
-
-  @Column({ default: 0 })
-  tokenVersion: number;
-
-  @CreateDateColumn({ type: 'timestamp' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'timestamp' })
-  updatedAt: Date;
-}
+export default User;

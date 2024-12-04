@@ -12,8 +12,8 @@ export class Customer implements ICustomer {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int', unique: true, nullable: true })
-  userId: number;
+  @Column({ type: 'varchar', unique: true, nullable: false })
+  userId: string;
 
   @Column({ type: 'varchar', unique: true, length: 150 })
   email: string;
