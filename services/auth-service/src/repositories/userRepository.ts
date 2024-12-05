@@ -1,20 +1,17 @@
-import { AppDataSource } from '../config/database';
-import { IUser, User } from '../models/user.model';
+import { ObjectId } from 'mongodb';
+import User, { IUser } from '../models/user.model';
 
 export class UserRepository {
-  private userRepository = AppDataSource.getRepository(User);
-
-  async create(userData: Partial<IUser>): Promise<User> {
+  async create(userData: Partial<IUser>): Promise<IUser> {
     try {
-      const existingUser = await this.userRepository.findOneBy({ email: userData.email });
+      const existingUser = await User.findOne({ email: userData.email });
       if (existingUser) {
         throw new Error('User with this email already exists');
       }
 
-      const user = this.userRepository.create(userData);
-      await this.userRepository.save(user);
+      const user = new User(userData);
 
-      return user;
+      return await user.save();
     } catch (error) {
       console.error('Error creating user:', error);
       throw new Error(`Failed to create user: ${error.message}`);
@@ -23,19 +20,17 @@ export class UserRepository {
 
   async getUserWithPasswordByEmail(email: string): Promise<IUser | null> {
     try {
-      return await this.userRepository.findOne({
-        where: { email },
-        select: ['id', 'email', 'password', 'name', 'tokenVersion'],
-      });
+      return await User.findOne({ email }).select('+password');
     } catch (error) {
-      console.error('Error finding user by ID:', error);
+      console.error('Error finding user by email:', error);
       throw error;
     }
   }
 
-  async findById(id: number): Promise<IUser | null> {
+  // Find user by ID
+  async findById(id: ObjectId): Promise<IUser | null> {
     try {
-      return await this.userRepository.findOne({ where: { id } });
+      return await User.findById(id);
     } catch (error) {
       console.error('Error finding user by ID:', error);
       throw error;
@@ -44,7 +39,7 @@ export class UserRepository {
 
   async findByEmail(email: string): Promise<IUser | null> {
     try {
-      return await this.userRepository.findOne({ where: { email } });
+      return await User.findOne({ email });
     } catch (error) {
       console.error('Error finding user by email:', error);
       throw error;
@@ -53,18 +48,24 @@ export class UserRepository {
 
   async findAll(): Promise<IUser[]> {
     try {
-      return await this.userRepository.find();
+      return await User.find();
     } catch (error) {
       console.error('Error fetching all users:', error);
       throw error;
     }
   }
 
-  async logoutUser(userId: number): Promise<void> {
+  async logoutUser(userId: ObjectId): Promise<void> {
     try {
-      await this.userRepository.increment({ id: userId }, 'tokenVersion', 1);
+      const user = await this.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      user.tokenVersion += 1;
+      await user.save();
     } catch (error) {
-      console.error('Error logout:', error);
+      console.error('Error logging out user:', error);
       throw error;
     }
   }

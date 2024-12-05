@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { validate } from 'class-validator';
-import { instanceToPlain, plainToClass } from 'class-transformer';
+import { instanceToPlain, plainToClass, plainToInstance } from 'class-transformer';
 import { UserService } from '../services/userService';
 import { CreateUserDTO } from '../dto/createUser.dto';
-import { UpdateUserDTO } from '../dto/updateUser.dto';
 import { LoginUserDTO } from '../dto/loginUser.dto';
+import { UpdateUserDTO } from '../dto/updateUser.dto';
+import { UserResponseDto } from '../dto/user-response.dto';
 
 class UserController {
   private userService = new UserService();
@@ -14,6 +15,8 @@ class UserController {
     this.getAllUsers = this.getAllUsers.bind(this);
     this.loginUser = this.loginUser.bind(this);
     this.logoutUser = this.logoutUser.bind(this);
+    this.getUserById = this.getUserById.bind(this);
+    this.getUserByEmail = this.getUserByEmail.bind(this);
   }
 
   async loginUser(req: Request, res: Response): Promise<void> {
@@ -29,7 +32,7 @@ class UserController {
       const { email, password } = loginUserDTO;
       const { user, token } = await this.userService.loginUser(email, password);
 
-      const userDto = instanceToPlain(user);
+      const userDto = plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
 
       res.cookie('token', token, {
         httpOnly: true,
@@ -64,7 +67,7 @@ class UserController {
         maxAge: 3600000,
       });
 
-      const userDto = instanceToPlain(user);
+      const userDto = plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true });
 
       res.status(201).json({ user: userDto, token });
     } catch (error) {
@@ -84,30 +87,30 @@ class UserController {
         return;
       }
 
-      const { user, token } = await this.userService.createUser(req.body);
+      // const updatedUser = await this.userService.updateUser(req.user._id, req.body);
 
-      // Set the JWT token in an HTTP-only cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 3600000,
-      });
-
-      res.status(201).json({ user, token });
+      // res.status(200).json({ user: instanceToPlain(updatedUser) });
+      res.status(200).json({ user: null });
     } catch (error) {
-      console.error('Failed to create user:', error);
-      res.status(400).json({ message: 'Failed to create user', error });
+      console.error('Failed to update user:', error);
+      res.status(400).json({ message: 'Failed to update user', error });
     }
   }
 
   async getUserById(req: Request, res: Response): Promise<void> {
     try {
-      const user = await this.userService.getUserById(Number(req.params.id));
+      const user = await this.userService.getUserById(req.params.id);
 
-      res.status(200).json({ user });
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      res
+        .status(200)
+        .json({ user: plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true }) });
     } catch (error) {
-      console.error('Failed to get users:', error);
+      console.error('Failed to get user by ID:', error);
       res.status(500).json({ message: 'Server error', error });
     }
   }
@@ -116,9 +119,16 @@ class UserController {
     try {
       const user = await this.userService.getUserByEmail(req.params.email);
 
-      res.status(200).json({ user });
+      if (!user) {
+        res.status(404).json({ message: 'User not found' });
+        return;
+      }
+
+      res
+        .status(200)
+        .json({ user: plainToInstance(UserResponseDto, user, { excludeExtraneousValues: true }) });
     } catch (error) {
-      console.error('Failed to get users:', error);
+      console.error('Failed to get user by email:', error);
       res.status(500).json({ message: 'Server error', error });
     }
   }
@@ -126,11 +136,15 @@ class UserController {
   async getAllUsers(req: Request, res: Response): Promise<void> {
     try {
       const users = await this.userService.getAllUsers();
+
       if (!users || users.length === 0) {
         res.status(404).json({ message: 'No users found' });
         return;
       }
-      res.json(users);
+
+      res
+        .status(200)
+        .json(plainToInstance(UserResponseDto, users, { excludeExtraneousValues: true }));
     } catch (error) {
       console.error('Failed to get users:', error);
       res.status(500).json({ message: 'Server error', error });
@@ -138,8 +152,8 @@ class UserController {
   }
 
   async logoutUser(req: Request, res: Response): Promise<void> {
-    const userId = req.user.id;
     try {
+      const userId = req.user._id;
       await this.userService.logoutUser(userId);
 
       res.clearCookie('token', {
@@ -150,7 +164,7 @@ class UserController {
 
       res.status(200).json({ message: 'Logged out successfully' });
     } catch (error) {
-      console.error('Failed to Logged out:', error);
+      console.error('Failed to log out:', error);
       res.status(500).json({ message: 'Server error', error });
     }
   }

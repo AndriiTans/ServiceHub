@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsOptional,
   IsNotEmpty,
-  MaxLength,
   ValidateNested,
   IsNumber,
 } from 'class-validator';
@@ -13,7 +12,7 @@ import { AddressDto } from './address-create.dto';
 export class CustomerCreateOrUpdateDto {
   @IsNotEmpty()
   @IsNumber()
-  userId: number;
+  userId: string;
 
   @IsEmail({}, { message: 'Invalid email format.' })
   @IsNotEmpty()

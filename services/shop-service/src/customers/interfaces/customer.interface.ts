@@ -3,7 +3,7 @@ import { UserRole } from '../enums/role.enum';
 
 export interface ICustomer {
   id: number;
-  userId: number;
+  userId: string;
   email: string;
   role?: UserRole;
   firstName?: string;

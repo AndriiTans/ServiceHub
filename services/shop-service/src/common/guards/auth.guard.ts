@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
 
       const { user, isValid }: { user: IUser; isValid: boolean } = response.data || {};
 
-      if (!user?.id || !user.email || !isValid) {
+      if (!user?._id || !user.email || !isValid) {
         throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED);
       }
 

@@ -29,7 +29,7 @@ export class OrderController {
   ): Promise<OrderResponseDto[]> {
     const user = req.user;
 
-    const customer = await this.customerService.getCustomerByUserId(user.id);
+    const customer = await this.customerService.getCustomerByUserId(user._id);
 
     const orders = await this.orderService.createOrder(customer.id, orderCreateDto);
 

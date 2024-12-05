@@ -13,15 +13,8 @@ services:
     environment:
       - PORT=${AUTH_SERVICE_PORT}
       - NODE_ENV=${AUTH_SERVICE_NODE_ENV}
-      - DB_HOST=${AUTH_SERVICE_DB_HOST}
-      - DB_PORT=${AUTH_SERVICE_DB_PORT}
-      - DB_USER=${AUTH_SERVICE_DB_USER}
-      - DB_PASSWORD=${AUTH_SERVICE_DB_PASSWORD}
-      - DB_NAME=${MYSQL_AUTH_DB_NAME}
+      - AUTH_SERVICE_MONGO_URI=${AUTH_SERVICE_MONGO_URI}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - app-network
     command: ["/usr/src/app/wait-for-it.sh", "${AUTH_SERVICE_DB_HOST}", "${AUTH_SERVICE_DB_PORT}", "--", "npm", "start"]
@@ -102,86 +95,86 @@ services:
   #   command: ["npm", "start"]
 
   # Web service
-  web-service:
-    build:
-      context: ./services/web-service
-      dockerfile: Dockerfile
-    ports:
-      - "${WEB_SERVICE_PORT}:${WEB_SERVICE_PORT}"
-    networks:
-      - app-network
-    depends_on:
-      shop-service:
-        condition: service_healthy
-    environment:
-      - AUTH_API_URL=http://auth-service:3001
-      - SHOP_API_URL=http://shop-service:3003
+  # web-service:
+  #   build:
+  #     context: ./services/web-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${WEB_SERVICE_PORT}:${WEB_SERVICE_PORT}"
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     shop-service:
+  #       condition: service_healthy
+  #   environment:
+  #     - AUTH_API_URL=http://auth-service:3001
+  #     - SHOP_API_URL=http://shop-service:3003
 
   # Social Network Service
-  social-network-service:
-    build:
-      context: ./services/social-network-service
-      dockerfile: Dockerfile
-    ports:
-      - "${SOCIAL_NETWORK_SERVICE_PORT}:${SOCIAL_NETWORK_SERVICE_PORT}"
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=${SOCIAL_NETWORK_SERVICE_NODE_ENV}
-      - PORT=${SOCIAL_NETWORK_SERVICE_PORT}
-      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_SOCIAL_NETWORK_DB}?authSource=admin
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      auth-service:
-        condition: service_healthy
-    networks:
-      - app-network
-    command: ["npm", "start"]
-    healthcheck:
-      test: ["CMD-SHELL", "curl --silent --fail http://localhost:${SOCIAL_NETWORK_SERVICE_PORT}/health || exit 1"]
-      interval: 5s
-      timeout: 20s
-      retries: 5
+  # social-network-service:
+  #   build:
+  #     context: ./services/social-network-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${SOCIAL_NETWORK_SERVICE_PORT}:${SOCIAL_NETWORK_SERVICE_PORT}"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - NODE_ENV=${SOCIAL_NETWORK_SERVICE_NODE_ENV}
+  #     - PORT=${SOCIAL_NETWORK_SERVICE_PORT}
+  #     - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_SOCIAL_NETWORK_DB}?authSource=admin
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #     auth-service:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+  #   command: ["npm", "start"]
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl --silent --fail http://localhost:${SOCIAL_NETWORK_SERVICE_PORT}/health || exit 1"]
+  #     interval: 5s
+  #     timeout: 20s
+  #     retries: 5
 
   # MongoDB Database Service
-  mongodb:
-    image: mongo:latest
-    ports:
-      - "${MONGO_PORT}:${MONGO_PORT}"
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
-      - MONGO_INITDB_DATABASE=${MONGO_SOCIAL_NETWORK_DB} # Optional, creates a default database
-    volumes:
-      - mongodb_data:/data/db
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # mongodb:
+  #   image: mongo:latest
+  #   ports:
+  #     - "${MONGO_PORT}:${MONGO_PORT}"
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+  #     - MONGO_INITDB_DATABASE=${MONGO_SOCIAL_NETWORK_DB} # Optional, creates a default database
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   # Gateway Service
-  gateway:
-    image: nginx:alpine
-    ports:
-      - "3011:3011" # Gateway exposed on port 3011
-    volumes:
-      - ./services/gateway/nginx.template:/etc/nginx/nginx.template:ro # Use a template
-    environment:
-      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
-      SHOP_SERVICE_PORT: ${SHOP_SERVICE_PORT}
-      WEB_SERVICE_PORT: ${WEB_SERVICE_PORT}
-    entrypoint: >
-      sh -c "envsubst '$$AUTH_SERVICE_PORT $$SHOP_SERVICE_PORT $$WEB_SERVICE_PORT' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
-    depends_on:
-      - auth-service
-      - shop-service
-      - web-service
-    networks:
-      - app-network
+  # gateway:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "3011:3011" # Gateway exposed on port 3011
+  #   volumes:
+  #     - ./services/gateway/nginx.template:/etc/nginx/nginx.template:ro # Use a template
+  #   environment:
+  #     AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+  #     SHOP_SERVICE_PORT: ${SHOP_SERVICE_PORT}
+  #     WEB_SERVICE_PORT: ${WEB_SERVICE_PORT}
+  #   entrypoint: >
+  #     sh -c "envsubst '$$AUTH_SERVICE_PORT $$SHOP_SERVICE_PORT $$WEB_SERVICE_PORT' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+  #   depends_on:
+  #     - auth-service
+  #     - shop-service
+  #     - web-service
+  #   networks:
+  #     - app-network
 
 volumes:
   mysql_data:

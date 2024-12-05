@@ -61,7 +61,7 @@ export class CustomerService {
     }
   }
 
-  async getCustomerByUserId(userId: number): Promise<Customer> {
+  async getCustomerByUserId(userId: string): Promise<Customer> {
     try {
       const customer = await this.customerRepository.findOne({
         where: { userId },
@@ -102,7 +102,7 @@ export class CustomerService {
     }
   }
 
-  async syncCustomer(userId: number, data: CustomerSyncDto): Promise<Customer> {
+  async syncCustomer(userId: string, data: CustomerSyncDto): Promise<Customer> {
     try {
       const existingCustomer = await this.customerRepository.findOne({ where: { userId } });
       if (!existingCustomer) {
@@ -170,7 +170,7 @@ export class CustomerService {
     }
   }
 
-  async updateCustomerByUserId(userId: number, data: CustomerUpdateDto): Promise<Customer> {
+  async updateCustomerByUserId(userId: string, data: CustomerUpdateDto): Promise<Customer> {
     try {
       const existingCustomer = await this.customerRepository.findOne({
         where: { userId },
