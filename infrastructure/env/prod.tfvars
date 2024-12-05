@@ -1,0 +1,5 @@
+region          = "us-east-1"
+auth_db_url     = "mongodb://auth-db-prod"
+shop_db_url     = "mongodb://shop-db-prod"
+jwt_secret_key  = "prod-secret-key"
+aws_region      = "us-east-1"

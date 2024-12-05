@@ -53,37 +53,37 @@ export class ProductController {
     return plainToInstance(ProductResponseDto, updatedProduct, { excludeExtraneousValues: true });
   }
 
-  @Put(':productId/image')
-  @UseInterceptors(
-    FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/products',
-        filename: (req, file, cb) => {
-          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          const ext = extname(file.originalname);
-          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-        },
-      }),
-      fileFilter: (req, file, cb) => {
-        if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
-          return cb(new BadRequestException('Only image files are allowed!'), false);
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  async uploadProductImage(
-    @Param('productId') productId: number,
-    @UploadedFile() file: Express.Multer.File,
-  ): Promise<ProductResponseDto> {
-    if (!file) {
-      throw new BadRequestException('File upload failed.');
-    }
+  // @Put(':productId/image')
+  // @UseInterceptors(
+  //   FileInterceptor('image', {
+  //     storage: diskStorage({
+  //       destination: './uploads/products',
+  //       filename: (req, file, cb) => {
+  //         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  //         const ext = extname(file.originalname);
+  //         cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
+  //       },
+  //     }),
+  //     fileFilter: (req, file, cb) => {
+  //       if (!file.mimetype.match(/\/(jpg|jpeg|png)$/)) {
+  //         return cb(new BadRequestException('Only image files are allowed!'), false);
+  //       }
+  //       cb(null, true);
+  //     },
+  //   }),
+  // )
+  // async uploadProductImage(
+  //   @Param('productId') productId: number,
+  //   @UploadedFile() file: Express.Multer.File,
+  // ): Promise<ProductResponseDto> {
+  //   if (!file) {
+  //     throw new BadRequestException('File upload failed.');
+  //   }
 
-    const updatedProduct = await this.productService.updateProductImage(productId, file.filename);
+  //   const updatedProduct = await this.productService.updateProductImage(productId, file.filename);
 
-    return plainToInstance(ProductResponseDto, updatedProduct, { excludeExtraneousValues: true });
-  }
+  //   return plainToInstance(ProductResponseDto, updatedProduct, { excludeExtraneousValues: true });
+  // }
 
   @Delete(':productId')
   async removeProductById(@Param('productId') productId: number): Promise<boolean> {

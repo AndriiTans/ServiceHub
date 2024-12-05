@@ -1,4 +1,3 @@
-// app.ts or server.ts
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';

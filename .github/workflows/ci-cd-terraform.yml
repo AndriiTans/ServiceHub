@@ -1,0 +1,162 @@
+name: Deploy to AWS using Terraform
+
+on:
+  push:
+    branches:
+      - master-test
+      - deployment-test
+
+jobs:
+  deploy:
+    name: Deploy Services and Infrastructure
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-east-1
+      TF_WORKING_DIR: infrastructure
+
+    steps:
+      # Print environment variables for debugging
+      - name: Print all environment variables
+        run: printenv
+
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Set environment based on branch
+      - name: Set Environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then
+            echo "env_name=prod" >> $GITHUB_ENV
+            echo "tfvars_file=prod.tfvars" >> $GITHUB_ENV
+          else
+            echo "env_name=dev" >> $GITHUB_ENV
+            echo "tfvars_file=dev.tfvars" >> $GITHUB_ENV
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Dependencies for Build
+        working-directory: services
+        run: |
+          # Install all dependencies (including devDependencies) for the build step
+          cd auth-service && npm install
+          cd ../shop-service && npm install
+
+      - name: Build and Package Lambda Functions
+        working-directory: services
+        run: |
+          # Auth Service
+          cd auth-service
+          npm run build
+          npm prune --production # Remove devDependencies after the build
+          zip -r auth-service.zip dist node_modules package.json
+          mv auth-service.zip ../../infrastructure/lambda/dist-package-auth.zip
+          cd ..
+
+          # Shop Service
+          cd shop-service
+          npm run build
+          npm prune --production # Remove devDependencies after the build
+          zip -r shop-service.zip dist node_modules package.json
+          mv shop-service.zip ../../infrastructure/lambda/dist-package-shop.zip
+
+      # Verify ZIP files and check their contents
+      - name: Verify and Inspect ZIP Files
+        run: |
+          if [[ ! -f "infrastructure/lambda/dist-package-auth.zip" ]]; then
+            echo "Error: dist-package-auth does not exist!" && exit 1
+          fi
+          if [[ ! -f "infrastructure/lambda/dist-package-shop.zip" ]]; then
+            echo "Error: dist-package-shop.zip does not exist!" && exit 1
+          fi
+
+          echo "Both ZIP files exist. Checking sizes..."
+
+          echo "Size of dist-package-auth.zip:"
+          du -h infrastructure/lambda/dist-package-auth.zip
+          echo "Size of dist-package-shop.zip:"
+          du -h infrastructure/lambda/dist-package-shop.zip
+
+          echo "Both ZIP files exist. Checking contents..."
+
+          # echo "Contents of dist-package-auth.zip:"
+          # unzip -l infrastructure/lambda/dist-package-auth.zip
+
+          # echo "Contents of dist-package-shop.zip:"
+          # unzip -l infrastructure/lambda/dist-package-shop.zip
+
+
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.6
+
+      # Initialize Terraform
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Cleanup Existing Resources
+        run: |
+          aws lambda delete-function --function-name auth-service || true
+          aws lambda delete-function --function-name shop-service || true
+          aws iam delete-role --role-name auth-service_execution_role || true
+          aws iam delete-role --role-name shop-service_execution_role || true
+          aws logs delete-log-group --log-group-name "/aws/lambda/auth-service" || true
+          aws logs delete-log-group --log-group-name "/aws/lambda/shop-service" || true
+
+      - name: Cleanup Old IAM Roles
+        run: |
+          echo "Cleaning up old IAM roles..."
+          aws iam list-roles --query "Roles[?contains(RoleName, 'execution_role')].RoleName" --output text | while read -r role; do
+            echo "Deleting role: $role"
+            aws iam delete-role --role-name "$role" || true
+          done
+
+      # Clean up existing roles from Terraform state if necessary
+      - name: Clean Up Terraform State
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform state rm aws_iam_role.auth-service_execution_role || true
+          terraform state rm aws_iam_role.shop-service_execution_role || true
+
+      # Run Terraform Destroy (optional, to ensure a clean slate)
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform destroy -auto-approve -var-file=env/${{ env.tfvars_file }}
+
+      - name: Cleanup Existing Lambda Functions
+        run: |
+          aws lambda delete-function --function-name auth-service || true
+          aws lambda delete-function --function-name shop-service || true
+
+      # Validate Terraform configuration
+      - name: Terraform Validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
+
+      # Plan Terraform changes
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -var-file=env/${{ env.tfvars_file }}
+
+      # Apply Terraform changes
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve -var-file=env/${{ env.tfvars_file }}
+
+      # Verify Deployment
+      - name: Verify Deployment
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "API Gateway URL:"
+          terraform output -raw api_gateway_url

@@ -11,5 +11,10 @@
     "auth-service",
     "shop-service",
     "frontend-app"
-  ]
+  ],
+  "dependencies": {
+    "@aws-sdk/client-api-gateway": "^3.699.0",
+    "@aws-sdk/client-iam": "^3.699.0",
+    "@aws-sdk/client-lambda": "^3.699.0"
+  }
 }
