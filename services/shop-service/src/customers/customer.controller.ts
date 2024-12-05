@@ -76,7 +76,7 @@ export class CustomerController {
 
       const customerDto: CustomerCreateOrUpdateDto = {
         ...data,
-        userId: user.id,
+        userId: user._id,
         email: user.email,
       };
 
@@ -97,7 +97,7 @@ export class CustomerController {
     try {
       const user: IUser = req.user;
 
-      return await this.customerService.updateCustomerByUserId(user.id, data);
+      return await this.customerService.updateCustomerByUserId(user._id, data);
     } catch (error) {
       throw new HttpException('Failed to update the customer.', HttpStatus.INTERNAL_SERVER_ERROR);
     }

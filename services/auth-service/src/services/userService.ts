@@ -1,30 +1,27 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { ObjectId } from 'mongodb';
+import { CreateUserDTO } from 'dto/createUser.dto';
 import { UserRepository } from '../repositories/userRepository';
-import { IUser } from '../models/user.model';
 
 export class UserService {
   private userRepository = new UserRepository();
 
-  async createUser(userData: Partial<IUser>) {
+  async createUser(userData: CreateUserDTO) {
     const salt = await bcrypt.genSalt(10);
-    console.log('salt');
     const hashedPassword = await bcrypt.hash(userData.password.toString(), salt);
-    console.log('hashedPassword', hashedPassword);
 
     const newUser = await this.userRepository.create({
       ...userData,
       password: hashedPassword,
+      tokenVersion: 0,
     });
 
     const tokenPayload = {
-      id: newUser.id,
+      id: newUser._id.toString(),
       email: newUser.email,
       tokenVersion: newUser.tokenVersion,
     };
-
-    console.log('newUser.tokenVersion ', newUser.tokenVersion);
-
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET_KEY, {
       expiresIn: '365d',
     });
@@ -45,12 +42,10 @@ export class UserService {
     }
 
     const tokenPayload = {
-      id: user.id,
+      id: user._id.toString(),
       email: user.email,
       tokenVersion: user.tokenVersion,
     };
-
-    console.log('.process.env.JWT_SECRET_KEY ', process.env.JWT_SECRET_KEY);
 
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET_KEY, {
       expiresIn: '365d',
@@ -63,15 +58,15 @@ export class UserService {
     return await this.userRepository.findAll();
   }
 
-  async getUserById(userId: number) {
-    return await this.userRepository.findById(userId);
+  async getUserById(userId: string) {
+    return await this.userRepository.findById(new ObjectId(userId));
   }
 
   async getUserByEmail(userEmail: string) {
     return await this.userRepository.findByEmail(userEmail);
   }
 
-  async logoutUser(userId: number): Promise<void> {
+  async logoutUser(userId: ObjectId): Promise<void> {
     await this.userRepository.logoutUser(userId);
   }
 }

@@ -14,9 +14,9 @@ import { AddressDto } from './address-create.dto';
 @InputType()
 export class CustomerCreateFullAddressDto {
   @Field()
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
-  userId: number;
+  userId: string;
 
   @Field()
   @IsEmail({}, { message: 'Invalid email format.' })

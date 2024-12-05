@@ -1,19 +1,11 @@
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsNotEmpty,
-  MaxLength,
-  ValidateNested,
-  IsNumber,
-} from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsNotEmpty, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { AddressDto } from './address-create.dto';
 
 export class CustomerCreateFullAddressDto {
   @IsNotEmpty()
-  @IsNumber()
-  userId: number;
+  @IsString()
+  userId: string;
 
   @IsEmail({}, { message: 'Invalid email format.' })
   @IsNotEmpty()

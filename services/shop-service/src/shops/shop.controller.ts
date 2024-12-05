@@ -47,7 +47,7 @@ export class ShopController {
     try {
       const user = req.user;
 
-      const shop = await this.shopService.getShopByUserId(user.id);
+      const shop = await this.shopService.getShopByUserId(user._id);
 
       return plainToInstance(ShopResponseDto, shop, { excludeExtraneousValues: true });
     } catch (error) {
@@ -64,7 +64,7 @@ export class ShopController {
     try {
       const user = req.user;
 
-      const owner = await this.customerService.getCustomerByUserId(user.id);
+      const owner = await this.customerService.getCustomerByUserId(user._id);
 
       const shopCreateInput: ShopCreateInputDto = {
         ...createShopDto,
@@ -93,7 +93,7 @@ export class ShopController {
     try {
       const user = req.user;
 
-      const shop = await this.shopService.updateShop(user.id, shopUpdateInput);
+      const shop = await this.shopService.updateShop(user._id, shopUpdateInput);
 
       return plainToInstance(ShopResponseDto, shop, { excludeExtraneousValues: true });
     } catch (error) {

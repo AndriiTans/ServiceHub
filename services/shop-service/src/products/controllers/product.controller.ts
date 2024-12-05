@@ -147,7 +147,7 @@ export class ProductController {
   ): Promise<CommentResponseDto> {
     const user = req.user;
 
-    const customer = await this.customerService.getCustomerByUserId(user.id);
+    const customer = await this.customerService.getCustomerByUserId(user._id);
 
     const comment = await this.productService.createComment(
       customer.id,
@@ -190,7 +190,7 @@ export class ProductController {
   ): Promise<RatingResponseDto> {
     const user = req.user;
 
-    const customer = await this.customerService.getCustomerByUserId(user.id);
+    const customer = await this.customerService.getCustomerByUserId(user._id);
 
     const rating = await this.productService.createRating(customer.id, productId, ratingCreateDto);
 
