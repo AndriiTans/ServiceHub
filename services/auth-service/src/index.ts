@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import passport from './auth/googleAuth';
 import { connectDatabase } from './config/database';
 import apiRoutes from './routes';
 import logger from './utils/logger';
@@ -13,6 +14,8 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(logger);
+
+app.use(passport.initialize());
 
 app.use('/api', apiRoutes);
 

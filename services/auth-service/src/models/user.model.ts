@@ -4,7 +4,9 @@ export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  googleId?: string;
+  authMethod: 'local' | 'google';
   tokenVersion: number;
   createdAt: Date;
   updatedAt: Date;
@@ -20,13 +22,22 @@ const UserSchema: Schema<IUser> = new mongoose.Schema<IUser>(
     },
     name: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
       select: false,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    authMethod: {
+      type: String,
+      enum: ['local', 'google'],
+      required: true,
     },
     tokenVersion: {
       type: Number,

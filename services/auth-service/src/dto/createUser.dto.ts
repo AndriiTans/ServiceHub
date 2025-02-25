@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Length, IsEnum } from 'class-validator';
 
 export class CreateUserDTO {
   @IsString()
@@ -8,7 +8,15 @@ export class CreateUserDTO {
   @IsEmail()
   email: string;
 
+  @IsOptional()
   @IsString()
   @Length(6, 100)
-  password: string;
+  password?: string; // Make password optional for Google users
+
+  @IsEnum(['local', 'google'])
+  authMethod: 'local' | 'google'; // Ensure we track the authentication method
+
+  @IsOptional()
+  @IsString()
+  googleId?: string; // Store Google ID for Google-authenticated users
 }
