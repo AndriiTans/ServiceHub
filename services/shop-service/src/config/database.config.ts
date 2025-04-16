@@ -4,11 +4,13 @@ import * as dotenv from 'dotenv';
 // Load environment variables from the .env file
 dotenv.config();
 
-console.log('CONFIGGGGGGGGGGG', {  host: process.env.SHOP_SERVICE_DB_HOST,
+console.log('CONFIGGGGGGGGGGG', {
+  host: process.env.SHOP_SERVICE_DB_HOST,
   port: parseInt(process.env.SHOP_SERVICE_DB_PORT, 10),
   username: process.env.SHOP_SERVICE_DB_USER,
   password: process.env.SHOP_SERVICE_DB_PASSWORD,
-  database: process.env.SHOP_SERVICE_DB_NAME });
+  database: process.env.SHOP_SERVICE_DB_NAME,
+});
 // Define and export TypeORM configuration
 export const DatabaseConfig: TypeOrmModuleOptions = {
   // Specify MySQL as the database type
