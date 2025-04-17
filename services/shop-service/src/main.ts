@@ -9,6 +9,7 @@ import { AppDataSource } from './config/data-source';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 // import { ExpressAdapter } from '@nestjs/platform-express';
 
 let server: Handler; // Holds the serverlessExpress instance for reuse
@@ -16,8 +17,21 @@ let server: Handler; // Holds the serverlessExpress instance for reuse
 async function createApp() {
   const app = await NestFactory.create(AppModule);
 
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Shop Service API')
+    .setDescription('API documentation for the Shop Service')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+
   app.setGlobalPrefix('v1', {
-    exclude: [{ path: 'health', method: RequestMethod.GET }],
+    exclude: [
+      { path: 'health', method: RequestMethod.GET },
+      { path: 'api-docs', method: RequestMethod.GET },
+    ],
   });
 
   app.use(

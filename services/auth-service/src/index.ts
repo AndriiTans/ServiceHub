@@ -5,6 +5,8 @@ import passport from './auth/googleAuth';
 import { connectDatabase } from './config/database';
 import apiRoutes from './routes';
 import logger from './utils/logger';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 // dotenv.config(); // Load env
 
@@ -16,6 +18,9 @@ app.use(express.json());
 app.use(logger);
 
 app.use(passport.initialize());
+
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use('/api', apiRoutes);
 
