@@ -27,7 +27,7 @@ async function createApp() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  app.setGlobalPrefix('v1', {
+  app.setGlobalPrefix('api/v1', {
     exclude: [
       { path: 'health', method: RequestMethod.GET },
       { path: 'api-docs', method: RequestMethod.GET },

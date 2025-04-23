@@ -1,30 +1,45 @@
 worker_processes 1;
 
-events { worker_connections 1024; }
+events {
+  worker_connections 1024;
+}
 
 http {
   server {
     listen 3011;
 
-    # Route API requests to Auth Service
-    location /api/auth/ {
-      proxy_pass http://auth-service:${AUTH_SERVICE_PORT}/;
+    # 🔐 internal auth check
+    location = /auth_check {
+      internal;
+      proxy_pass http://auth-service:${AUTH_SERVICE_PORT}/api/v1/users/verify-token;
+      proxy_pass_request_body off;
+      proxy_set_header Content-Length "";
+      proxy_set_header Authorization $http_authorization;
+    }
+
+    # Healthcheck route (no auth required)
+    location = /api/shop/health {
+      proxy_pass http://shop-service:${SHOP_SERVICE_PORT}/health;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-    # Route API requests to Shop Service
+    # All other /api/shop/* routes are protected
     location /api/shop/ {
+      auth_request /auth_check;
+      auth_request_set $auth_status $upstream_status;
+
       proxy_pass http://shop-service:${SHOP_SERVICE_PORT}/;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Authorization $http_authorization;
     }
 
-    # Serve the Next.js Web App
-    location /web/ {
-      proxy_pass http://frontend:${FRONTEND_PORT}/;
+    # Public Auth routes
+    location /api/auth/ {
+      proxy_pass http://auth-service:${AUTH_SERVICE_PORT}/;
       proxy_set_header Host $host;
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

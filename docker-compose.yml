@@ -6,8 +6,8 @@ services:
     build:
       context: ./services/auth-service
       dockerfile: Dockerfile
-    ports:
-      - "${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}"
+    expose:
+      - "${AUTH_SERVICE_PORT}"
     env_file:
       - .env
     environment:
@@ -29,8 +29,10 @@ services:
     build:
       context: ./services/shop-service
       dockerfile: Dockerfile
-    ports:
-      - "${SHOP_SERVICE_PORT}:${SHOP_SERVICE_PORT}"
+    expose:
+      - "${SHOP_SERVICE_PORT}"
+    # ports:
+    #   - "${SHOP_SERVICE_PORT}:${SHOP_SERVICE_PORT}"
     env_file:
       - .env
     environment:
@@ -57,13 +59,15 @@ services:
       timeout: 20s
       retries: 5
 
-  # MySQL Database Service
+  # MySQL Database
   mysql:
     image: mysql:latest
+    expose:
+      - "${MYSQL_PORT}"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-    ports:
-      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    # ports:
+    #   - "${MYSQL_PORT}:${MYSQL_PORT}"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -82,16 +86,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "${FRONTEND_PORT}:80"
-    networks:
-      - app-network
     depends_on:
       shop-service:
         condition: service_healthy
     environment:
-      - AUTH_API_URL=http://auth-service:3001
-      - SHOP_API_URL=http://shop-service:3003
+      - AUTH_API_URL=http://auth-service:${AUTH_SERVICE_PORT}
+      - SHOP_API_URL=http://shop-service:${SHOP_SERVICE_PORT}
+    networks:
+      - app-network
 
-  # Social Network Service
+        # Social Network Service
   # social-network-service:
   #   build:
   #     context: ./services/social-network-service
@@ -141,9 +145,9 @@ services:
   gateway:
     image: nginx:alpine
     ports:
-      - "3011:3011" # Gateway exposed on port 3011
+      - "3011:3011"
     volumes:
-      - ./services/gateway/nginx.template:/etc/nginx/nginx.template:ro # Use a template
+      - ./services/gateway/nginx.template:/etc/nginx/nginx.template:ro
     environment:
       AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
       SHOP_SERVICE_PORT: ${SHOP_SERVICE_PORT}
@@ -154,6 +158,28 @@ services:
       - auth-service
       - shop-service
       - frontend
+    networks:
+      - app-network
+
+  welcome:
+    image: alpine
+    depends_on:
+      gateway:
+        condition: service_started
+      auth-service:
+        condition: service_healthy
+      shop-service:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '';
+        echo 'All services are up and running!';
+        echo '';
+        echo 'Frontend:  http://localhost:${FRONTEND_PORT}';
+        echo 'Auth API:  http://localhost:3011/api/auth/';
+        echo 'Shop API:  http://localhost:3011/api/shop/';
+        echo '';
+      "
     networks:
       - app-network
 
