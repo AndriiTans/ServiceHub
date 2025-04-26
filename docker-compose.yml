@@ -1,0 +1,191 @@
+version: '3.8'
+
+services:
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    expose:
+      - "${AUTH_SERVICE_PORT}"
+    env_file:
+      - .env
+    environment:
+      - PORT=${AUTH_SERVICE_PORT}
+      - NODE_ENV=${AUTH_SERVICE_NODE_ENV}
+      - AUTH_SERVICE_MONGO_URI=${AUTH_SERVICE_MONGO_URI}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    networks:
+      - app-network
+    command: ["/usr/src/app/wait-for-it.sh", "${AUTH_SERVICE_DB_HOST}", "${AUTH_SERVICE_DB_PORT}", "--", "npm", "start"]
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/src/app/healthcheck.sh"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+
+  # Shop Service
+  shop-service:
+    build:
+      context: ./services/shop-service
+      dockerfile: Dockerfile
+    expose:
+      - "${SHOP_SERVICE_PORT}"
+    # ports:
+    #   - "${SHOP_SERVICE_PORT}:${SHOP_SERVICE_PORT}"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${SHOP_SERVICE_NODE_ENV}
+      - PORT=${SHOP_SERVICE_PORT}
+      - DB_HOST=${SHOP_SERVICE_DB_HOST}
+      - DB_PORT=${SHOP_SERVICE_DB_PORT}
+      - DB_USER=${SHOP_SERVICE_DB_USER}
+      - DB_PASSWORD=${SHOP_SERVICE_DB_PASSWORD}
+      - DB_NAME=${SHOP_SERVICE_DB_NAME}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - SHOP_SERVICE_URL=http://shop-service:${SHOP_SERVICE_PORT}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - app-network
+    command: ["npm", "start"]
+    healthcheck:
+      test: ["CMD-SHELL", "/usr/src/app/healthcheck.sh"]
+      interval: 5s
+      timeout: 20s
+      retries: 5
+
+  # MySQL Database
+  mysql:
+    image: mysql:latest
+    expose:
+      - "${MYSQL_PORT}"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    # ports:
+    #   - "${MYSQL_PORT}:${MYSQL_PORT}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT}:80"
+    depends_on:
+      shop-service:
+        condition: service_healthy
+    environment:
+      - AUTH_API_URL=http://auth-service:${AUTH_SERVICE_PORT}
+      - SHOP_API_URL=http://shop-service:${SHOP_SERVICE_PORT}
+    networks:
+      - app-network
+
+        # Social Network Service
+  # social-network-service:
+  #   build:
+  #     context: ./services/social-network-service
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${SOCIAL_NETWORK_SERVICE_PORT}:${SOCIAL_NETWORK_SERVICE_PORT}"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     - NODE_ENV=${SOCIAL_NETWORK_SERVICE_NODE_ENV}
+  #     - PORT=${SOCIAL_NETWORK_SERVICE_PORT}
+  #     - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:${MONGO_PORT}/${MONGO_SOCIAL_NETWORK_DB}?authSource=admin
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #     auth-service:
+  #       condition: service_healthy
+  #   networks:
+  #     - app-network
+  #   command: ["npm", "start"]
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl --silent --fail http://localhost:${SOCIAL_NETWORK_SERVICE_PORT}/health || exit 1"]
+  #     interval: 5s
+  #     timeout: 20s
+  #     retries: 5
+
+  # MongoDB Database Service
+  # mongodb:
+  #   image: mongo:latest
+  #   ports:
+  #     - "${MONGO_PORT}:${MONGO_PORT}"
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+  #     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+  #     - MONGO_INITDB_DATABASE=${MONGO_SOCIAL_NETWORK_DB} # Optional, creates a default database
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "mongosh --username ${MONGO_INITDB_ROOT_USERNAME} --password ${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })' --quiet || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # Gateway Service
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "3011:3011"
+    volumes:
+      - ./services/gateway/nginx.template:/etc/nginx/nginx.template:ro
+    environment:
+      AUTH_SERVICE_PORT: ${AUTH_SERVICE_PORT}
+      SHOP_SERVICE_PORT: ${SHOP_SERVICE_PORT}
+      FRONTEND_PORT: ${FRONTEND_PORT}
+    entrypoint: >
+      sh -c "envsubst '$$AUTH_SERVICE_PORT $$SHOP_SERVICE_PORT $$FRONTEND_PORT' < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - auth-service
+      - shop-service
+      - frontend
+    networks:
+      - app-network
+
+  welcome:
+    image: alpine
+    depends_on:
+      gateway:
+        condition: service_started
+      auth-service:
+        condition: service_healthy
+      shop-service:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '';
+        echo 'All services are up and running!';
+        echo '';
+        echo 'Frontend:  http://localhost:${FRONTEND_PORT}';
+        echo 'Auth API:  http://localhost:3011/api/auth/';
+        echo 'Shop API:  http://localhost:3011/api/shop/';
+        echo '';
+      "
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+  mongodb_data:
+
+networks:
+  app-network:
