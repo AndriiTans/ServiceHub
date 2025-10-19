@@ -1,8 +1,8 @@
-import { User } from './models';
+import { IUser } from './models';
 
 declare namespace Express {
   interface Request {
-    user?: User;
+    user?: IUser;
     file?: {
       fieldname: string;
       originalname: string;
